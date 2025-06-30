@@ -1,0 +1,31 @@
+# .air.toml
+# Hot reload config for Air (https://github.com/cosmtrek/air)
+
+# The root of your project
+root = "."
+tmp_dir = "tmp"
+
+[build]
+  cmd = "go build -o ./tmp/main ."  # Build the main binary
+  bin = "tmp/main"                  # Path to the compiled binary
+  full_bin = ""                     # Leave empty unless needed
+  include_ext = ["go", "tpl", "tmpl", "html"]  # Watch these file extensions
+  exclude_dir = ["tmp", "vendor"]   # Skip rebuilding on changes in these
+  exclude_file = []                 # Can add specific files to ignore
+  follow_symlink = true
+  delay = 1000                      # Delay before rebuild in ms
+  log = "build-errors.log"
+  send_interrupt = true            # Gracefully stop the process before restarting
+
+[color]
+  main = "yellow"
+  watcher = "cyan"
+  build = "green"
+  runner = "magenta"
+  error = "red"
+
+[log]
+  time = true
+
+[misc]
+  clean_on_exit = true

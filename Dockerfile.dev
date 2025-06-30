@@ -1,0 +1,16 @@
+FROM golang:1.24-alpine
+
+WORKDIR /app
+
+# Install git for go install
+RUN apk add --no-cache git
+
+# Install the latest Air from the official air-verse repo
+RUN go install github.com/air-verse/air@latest
+
+# Add Go bin to PATH
+ENV PATH="/go/bin:${PATH}"
+
+COPY . .
+
+CMD ["air"]
