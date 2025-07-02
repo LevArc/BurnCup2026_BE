@@ -1,0 +1,21 @@
+{
+  "name": "Burncup Backend",
+  "dockerComposeFile": "../../docker-compose.dev.yml",
+  "service": "backend",
+  "workspaceFolder": "/app",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "golang.Go"
+      ],
+      "settings": {
+        "go.useLanguageServer": true,
+        "go.gopath": "/go",
+        "go.toolsGopath": "/go"
+      }
+    }
+  },
+  "postCreateCommand": "go mod tidy",
+  "forwardPorts": [8080],
+  "waitFor": "onCreateCommand"
+}
