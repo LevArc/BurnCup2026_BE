@@ -36,6 +36,7 @@ func JWTAuthMiddleware() gin.HandlerFunc {
 		// Optionally attach user claims to context
 		if claims, ok := token.Claims.(jwt.MapClaims); ok {
 			c.Set("user", claims)
+			
 		}
 
 		c.Next()
