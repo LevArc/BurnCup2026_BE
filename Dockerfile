@@ -2,6 +2,9 @@ FROM golang:1.24-alpine AS builder
 
 WORKDIR /app
 COPY go.mod go.sum ./
+
+ENV GIN_MODE=release
+
 RUN go mod download
 
 COPY . .
