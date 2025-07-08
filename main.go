@@ -4,6 +4,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	_ "embed"
 
 	"github.com/NotchG/BurnCup/handlers"
 	"github.com/NotchG/BurnCup/middleware"
@@ -13,14 +14,11 @@ import (
 	"github.com/rs/cors"
 )
 
-func execSQLFile(db *sqlx.DB, path string) error {
-	sqlBytes, err := os.ReadFile(path)
-	if err != nil {
-		return err
-	}
-	_, err = db.Exec(string(sqlBytes))
-	return err
-}
+//go:embed TABLES.sql
+var tableSQL string
+
+//go:embed INSERT.sql
+var insertSQL string
 
 func main() {
 	// Example DSN: "host=localhost port=5432 user=postgres password=yourpassword dbname=yourdb sslmode=disable"
@@ -36,10 +34,10 @@ func main() {
 	defer db.Close()
 
 	// Run TABLES.sql and INSERT.sql on startup
-	if err := execSQLFile(db, "TABLES.sql"); err != nil {
+	if _, err := db.Exec(tableSQL); err != nil {
 		log.Fatalf("Failed to execute TABLES.sql: %v", err)
 	}
-	if err := execSQLFile(db, "INSERT.sql"); err != nil {
+	if _, err := db.Exec(insertSQL); err != nil {
 		log.Fatalf("Failed to execute INSERT.sql: %v", err)
 	}
 
@@ -74,6 +72,7 @@ func main() {
 
 		protected.POST("/create-team", handlers.CreateTeamHandler(db))
 		protected.GET("/get-teams", handlers.GetUserCompetitionsHandler(db))
+		protected.POST("/join-team", handlers.JoinTeamHandler(db))
 	}
 
 	// Use rs/cors to wrap the Gin engine

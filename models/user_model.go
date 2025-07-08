@@ -1,7 +1,6 @@
 package models
 
 type User struct {
-    ID          string  `db:"id" json:"id"`
     Binusian    bool    `db:"binusian" json:"binusian"`
     FullName    string  `db:"full_name" json:"fullName"`
     PhoneNumber string  `db:"phone_number" json:"phoneNumber"`

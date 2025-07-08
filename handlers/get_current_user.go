@@ -23,14 +23,14 @@ func GetCurrentUserHandler(db *sqlx.DB) gin.HandlerFunc {
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid user claims"})
 			return
 		}
-		userID, ok := mapClaims["sub"].(string)
+		userEmail, ok := mapClaims["email"].(string)
 		if !ok {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "User ID not found in token"})
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "User email not found in token"})
 			return
 		}
 
 		var user models.User
-		if err := db.Get(&user, `SELECT id, binusian, full_name, phone_number, email, nim, major, school FROM users WHERE id=$1`, userID); err != nil {
+		if err := db.Get(&user, `SELECT email, binusian, full_name, phone_number, nim, major, school FROM users WHERE email=$1`, userEmail); err != nil {
 			c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
 			return
 		}

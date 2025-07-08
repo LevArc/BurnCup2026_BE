@@ -9,7 +9,7 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
-// CreateUserProfileHandler creates a new user profile using JWT claims and request body
+// CreateUserProfileHandler creates or updates a user profile using JWT claims and request body
 func CreateUserProfileHandler(db *sqlx.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		claims, ok := c.Get("user")
@@ -22,9 +22,9 @@ func CreateUserProfileHandler(db *sqlx.DB) gin.HandlerFunc {
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid user claims"})
 			return
 		}
-		userID, ok := mapClaims["sub"].(string)
+		userEmail, ok := mapClaims["email"].(string)
 		if !ok {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "User ID not found in token"})
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "User email not found in token"})
 			return
 		}
 
@@ -34,21 +34,20 @@ func CreateUserProfileHandler(db *sqlx.DB) gin.HandlerFunc {
 			return
 		}
 
-		// Use claims for ID and possibly other fields
-		req.ID = userID
+		// Use claims for email and possibly other fields
+		req.Email = userEmail
 
 		_, err := db.Exec(
-			`INSERT INTO users (id, binusian, full_name, phone_number, email, nim, major, school)
-			 VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-			 ON CONFLICT (id) DO UPDATE SET
+			`INSERT INTO users (email, binusian, full_name, phone_number, nim, major, school)
+			 VALUES ($1, $2, $3, $4, $5, $6, $7)
+			 ON CONFLICT (email) DO UPDATE SET
 				binusian=EXCLUDED.binusian,
 				full_name=EXCLUDED.full_name,
 				phone_number=EXCLUDED.phone_number,
-				email=EXCLUDED.email,
 				nim=EXCLUDED.nim,
 				major=EXCLUDED.major,
 				school=EXCLUDED.school`,
-			req.ID, req.Binusian, req.FullName, req.PhoneNumber, req.Email, req.NIM, req.Major, req.School,
+			req.Email, req.Binusian, req.FullName, req.PhoneNumber, req.NIM, req.Major, req.School,
 		)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create or update user"})

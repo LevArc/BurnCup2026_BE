@@ -35,9 +35,9 @@ func GetUserCompetitionsHandler(db *sqlx.DB) gin.HandlerFunc {
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid user claims"})
 			return
 		}
-		userID, ok := mapClaims["sub"].(string)
+		userEmail, ok := mapClaims["email"].(string)
 		if !ok {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "User ID not found in token"})
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "User email not found in token"})
 			return
 		}
 
@@ -55,8 +55,8 @@ func GetUserCompetitionsHandler(db *sqlx.DB) gin.HandlerFunc {
             SELECT rc.id, rc.team_name, rc.team_code, rc.is_paid, rc.competition_id, rc.created_at, rc.updated_at
             FROM registered_competitions rc
             JOIN registered_competition_members rcm ON rc.id = rcm.registered_competition_id
-            WHERE rcm.user_id = $1
-        `, userID)
+            WHERE rcm.user_email = $1
+        `, userEmail)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch teams"})
 			return
@@ -73,23 +73,22 @@ func GetUserCompetitionsHandler(db *sqlx.DB) gin.HandlerFunc {
 			// Get team leader
 			var teamLeader models.User
 			err = db.Get(&teamLeader, `
-                SELECT u.id, u.binusian, u.full_name, u.phone_number, u.email, u.nim, u.major, u.school
+                SELECT u.email, u.binusian, u.full_name, u.phone_number, u.nim, u.major, u.school
                 FROM users u
-                JOIN registered_competition_members rcm ON u.id = rcm.user_id
+                JOIN registered_competition_members rcm ON u.email = rcm.user_email
                 WHERE rcm.registered_competition_id = $1 AND rcm.is_team_leader = true
                 LIMIT 1
             `, t.ID)
 			if err != nil {
-				// If not found, use zero value
 				teamLeader = models.User{}
 			}
 
 			// Get all members except the team leader
 			var members []models.User
 			err = db.Select(&members, `
-                SELECT u.id, u.binusian, u.full_name, u.phone_number, u.email, u.nim, u.major, u.school
+                SELECT u.email, u.binusian, u.full_name, u.phone_number, u.nim, u.major, u.school
                 FROM users u
-                JOIN registered_competition_members rcm ON u.id = rcm.user_id
+                JOIN registered_competition_members rcm ON u.email = rcm.user_email
                 WHERE rcm.registered_competition_id = $1 AND rcm.is_team_leader = false
             `, t.ID)
 			if err != nil {

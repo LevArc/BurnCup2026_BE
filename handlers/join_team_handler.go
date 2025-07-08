@@ -1,8 +1,6 @@
 package handlers
 
 import (
-	"crypto/rand"
-	"encoding/hex"
 	"net/http"
 	"strings"
 
@@ -11,23 +9,14 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
-// CreateTeamRequest is the expected payload for creating a team
-type CreateTeamRequest struct {
+// JoinTeamRequest is the expected payload for joining a team
+type JoinTeamRequest struct {
+	TeamCode      string `json:"teamCode" binding:"required"`
 	CompetitionID string `json:"competitionId" binding:"required"`
-	TeamName      string `json:"teamName" binding:"required"`
 }
 
-// generateTeamCode creates a random 8-character uppercase code
-func generateTeamCode() (string, error) {
-	b := make([]byte, 4)
-	if _, err := rand.Read(b); err != nil {
-		return "", err
-	}
-	return strings.ToUpper(hex.EncodeToString(b)), nil
-}
-
-// CreateTeamHandler creates a new team with the current user as team leader
-func CreateTeamHandler(db *sqlx.DB) gin.HandlerFunc {
+// JoinTeamHandler allows a user to join a team by code with eligibility checks
+func JoinTeamHandler(db *sqlx.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		// Parse user claims
 		claims, ok := c.Get("user")
@@ -47,19 +36,53 @@ func CreateTeamHandler(db *sqlx.DB) gin.HandlerFunc {
 		}
 
 		// Parse payload
-		var req CreateTeamRequest
+		var req JoinTeamRequest
 		if err := c.ShouldBindJSON(&req); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid payload"})
 			return
 		}
+		teamCode := strings.ToUpper(req.TeamCode)
 
-		// Fetch competition type and max_members
-		var competitionType string
-		var maxMembers *int
+		// Find the team by code and check competition
+		var teamID, teamCompetitionID string
+		var isPaid bool
 		err := db.QueryRowx(
-			`SELECT competition_type, max_members FROM competitions WHERE id=$1`,
-			req.CompetitionID,
-		).Scan(&competitionType, &maxMembers)
+			`SELECT id, competition_id, is_paid FROM registered_competitions WHERE team_code = $1`,
+			teamCode,
+		).Scan(&teamID, &teamCompetitionID, &isPaid)
+		if err != nil {
+			c.JSON(http.StatusNotFound, gin.H{"error": "Team not found"})
+			return
+		}
+		if isPaid {
+			c.JSON(http.StatusForbidden, gin.H{"error": "Cannot join a team that has already paid"})
+			return
+		}
+		if teamCompetitionID != req.CompetitionID {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Team does not belong to the specified competition"})
+			return
+		}
+
+		// Check if user is already a member of this team
+		var exists bool
+		err = db.QueryRowx(
+			`SELECT EXISTS (
+				SELECT 1 FROM registered_competition_members
+				WHERE registered_competition_id = $1 AND user_email = $2
+			)`, teamID, userEmail,
+		).Scan(&exists)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to check membership"})
+			return
+		}
+		if exists {
+			c.JSON(http.StatusConflict, gin.H{"error": "You are already a member of this team"})
+			return
+		}
+
+		// Fetch competition type
+		var competitionType string
+		err = db.Get(&competitionType, `SELECT competition_type FROM competitions WHERE id=$1`, teamCompetitionID)
 		if err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "Competition not found"})
 			return
@@ -96,6 +119,12 @@ func CreateTeamHandler(db *sqlx.DB) gin.HandlerFunc {
 		}
 
 		// Check max members for this competition
+		var maxMembers *int
+		err = db.Get(&maxMembers, `SELECT max_members FROM competitions WHERE id=$1`, teamCompetitionID)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch max members"})
+			return
+		}
 		if maxMembers != nil && *maxMembers > 0 {
 			var currentMembers int
 			err = db.Get(&currentMembers, `
@@ -103,7 +132,7 @@ func CreateTeamHandler(db *sqlx.DB) gin.HandlerFunc {
                 JOIN registered_competitions rc ON rc.id = rcm.registered_competition_id
                 WHERE rc.competition_id = $1
                 AND rcm.registered_competition_id = rc.id
-            `, req.CompetitionID)
+            `, teamCompetitionID)
 			if err != nil {
 				c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to count current team members"})
 				return
@@ -114,39 +143,17 @@ func CreateTeamHandler(db *sqlx.DB) gin.HandlerFunc {
 			}
 		}
 
-		// Generate random team code
-		teamCode, err := generateTeamCode()
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate team code"})
-			return
-		}
-
-		// Insert into registered_competitions
-		var teamID string
-		err = db.QueryRowx(
-			`INSERT INTO registered_competitions (team_name, team_code, is_paid, competition_id)
-             VALUES ($1, $2, $3, $4) RETURNING id`,
-			req.TeamName, teamCode, false, req.CompetitionID,
-		).Scan(&teamID)
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create team"})
-			return
-		}
-
-		// Insert the user as team leader in registered_competition_members
+		// Add user as a member (not team leader)
 		_, err = db.Exec(
 			`INSERT INTO registered_competition_members (registered_competition_id, user_email, is_team_leader)
              VALUES ($1, $2, $3)`,
-			teamID, userEmail, true,
+			teamID, userEmail, false,
 		)
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to add team leader"})
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to join team"})
 			return
 		}
 
-		c.JSON(http.StatusCreated, gin.H{
-			"teamId":   teamID,
-			"teamCode": teamCode,
-		})
+		c.JSON(http.StatusOK, gin.H{"message": "Successfully joined the team"})
 	}
 }

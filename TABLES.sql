@@ -1,11 +1,10 @@
 CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 
 CREATE TABLE IF NOT EXISTS users (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    email VARCHAR(255) PRIMARY KEY, -- EMAIL AS PRIMARY KEY
     binusian BOOLEAN NOT NULL,
     full_name VARCHAR(255) NOT NULL,
     phone_number VARCHAR(20) NOT NULL,
-    email VARCHAR(255) NOT NULL UNIQUE,
     nim VARCHAR(50),
     major VARCHAR(100),
     school VARCHAR(100),
@@ -63,7 +62,7 @@ CREATE TABLE IF NOT EXISTS registered_competitions (
 
 CREATE TABLE IF NOT EXISTS registered_competition_members (
     registered_competition_id UUID NOT NULL REFERENCES registered_competitions(id) ON DELETE CASCADE,
-    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    user_email VARCHAR(255) NOT NULL REFERENCES users(email) ON DELETE CASCADE, -- CHANGED FROM user_id TO user_email
     is_team_leader BOOLEAN NOT NULL DEFAULT FALSE,
-    PRIMARY KEY (registered_competition_id, user_id)
+    PRIMARY KEY (registered_competition_id, user_email)
 );
