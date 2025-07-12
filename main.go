@@ -77,7 +77,7 @@ func main() {
 
 	// Use rs/cors to wrap the Gin engine
 	corsHandler := cors.New(cors.Options{
-		AllowedOrigins:   []string{"http://localhost:3000", "http://host.docker.internal:3000", "https://burncuptesting.notchgnas.com"},
+		AllowedOrigins:   []string{"http://localhost:3000", "http://host.docker.internal:3000", "https://burncuptesting.notchgnas.com", "http://localhost:3001"},
 		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 		AllowedHeaders:   []string{"Origin", "Authorization", "Content-Type"},
 		ExposedHeaders:   []string{"Content-Length"},
