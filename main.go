@@ -24,7 +24,7 @@ func main() {
 	// Example DSN: "host=localhost port=5432 user=postgres password=yourpassword dbname=yourdb sslmode=disable"
 	dsn := os.Getenv("POSTGRES_DSN")
 	if dsn == "" {
-		dsn = "host=postgres port=5432 user=postgres password=postgres dbname=burncup_prod sslmode=disable"
+		dsn = "host=postgres port=5432 user=postgres password=postgres dbname=burncup_dev sslmode=disable"
 	}
 
 	db, err := sqlx.Connect("postgres", dsn)
