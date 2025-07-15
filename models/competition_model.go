@@ -23,6 +23,7 @@ type Competition struct {
 	RegistrationFee       int      `db:"registration_fee" json:"registrationfee"`
 	MaxMembers            *int     `db:"max_members" json:"maxMembers,omitempty"`
 	MinMembers            *int     `db:"min_members" json:"minMembers,omitempty"`
+	TeamSlot              int      `db:"team_slot" json:"teamSlot"`
 	CreatedAt             string   `db:"created_at" json:"createdAt"`
 	UpdatedAt             string   `db:"updated_at" json:"updatedAt"`
 	Prizes                []Prize  `json:"prizes"`

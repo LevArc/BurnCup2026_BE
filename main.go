@@ -1,30 +1,30 @@
 package main
 
 import (
+	_ "embed"
 	"log"
 	"net/http"
 	"os"
-	_ "embed"
 
 	"github.com/NotchG/BurnCup/handlers"
 	"github.com/NotchG/BurnCup/middleware"
 	"github.com/gin-gonic/gin"
 	"github.com/jmoiron/sqlx"
+	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
 	"github.com/rs/cors"
 )
 
-//go:embed TABLES.sql
-var tableSQL string
-
-//go:embed INSERT.sql
-var insertSQL string
-
 func main() {
+	// Load environment variables from .env file
+	if err := godotenv.Load(); err != nil {
+		log.Println("No .env file found or error loading .env file")
+	}
+
 	// Example DSN: "host=localhost port=5432 user=postgres password=yourpassword dbname=yourdb sslmode=disable"
 	dsn := os.Getenv("POSTGRES_DSN")
 	if dsn == "" {
-		dsn = "host=postgres port=5432 user=postgres password=postgres dbname=burncup_prod sslmode=disable"
+		dsn = "host=postgres port=5432 user=postgres password=postgres dbname=burncup_dev sslmode=disable"
 	}
 
 	db, err := sqlx.Connect("postgres", dsn)
@@ -33,19 +33,12 @@ func main() {
 	}
 	defer db.Close()
 
-	// Run TABLES.sql and INSERT.sql on startup
-	if _, err := db.Exec(tableSQL); err != nil {
-		log.Fatalf("Failed to execute TABLES.sql: %v", err)
-	}
-	if _, err := db.Exec(insertSQL); err != nil {
-		log.Fatalf("Failed to execute INSERT.sql: %v", err)
-	}
-
 	r := gin.Default()
 
 	r.GET("/", func(c *gin.Context) {
 		c.String(200, "BurnCup API is running")
 	})
+
 	r.NoRoute(func(c *gin.Context) {
 		c.JSON(404, gin.H{"error": "Not found"})
 	})
@@ -73,6 +66,14 @@ func main() {
 		protected.POST("/create-team", handlers.CreateTeamHandler(db))
 		protected.GET("/get-teams", handlers.GetUserCompetitionsHandler(db))
 		protected.POST("/join-team", handlers.JoinTeamHandler(db))
+
+		api.GET("/qr/:value", handlers.GenerateQRHandler())
+		protected.GET("/get-qr-link/:teamCode", handlers.GetQRLinkHandler(db))
+
+		protected.GET("/admin-basic-info", handlers.GetAdminBasicInfoHandler(db))
+		protected.GET("/admin-competitions-statistics", handlers.GetAdminCompetitionStatisticHandler(db))
+		protected.GET("/admin-all-teams", handlers.GetAllTeamsHandler(db))
+		protected.POST("/admin-add-competition", handlers.AddCompetitionHandler(db))
 	}
 
 	// Use rs/cors to wrap the Gin engine

@@ -2,13 +2,14 @@ package middleware
 
 import (
 	"net/http"
+	"os"
 	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
 )
 
-var nextAuthSecret = []byte("x+moMx7qVg46NDBVCsxguFtF+Oja6uy7NdFNOlV+Z7M=") // Use the same as NEXTAUTH_SECRET in your .env
+var nextAuthSecret = []byte(os.Getenv("JWT_SECRET_KEY"))
 
 func JWTAuthMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
@@ -36,7 +37,7 @@ func JWTAuthMiddleware() gin.HandlerFunc {
 		// Optionally attach user claims to context
 		if claims, ok := token.Claims.(jwt.MapClaims); ok {
 			c.Set("user", claims)
-			
+
 		}
 
 		c.Next()

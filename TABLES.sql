@@ -27,6 +27,7 @@ CREATE TABLE IF NOT EXISTS competitions (
     registration_fee INTEGER NOT NULL,
     max_members INTEGER,
     min_members INTEGER,
+    team_slot INTEGER NOT NULL,
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
@@ -55,6 +56,7 @@ CREATE TABLE IF NOT EXISTS registered_competitions (
     team_name VARCHAR(255) NOT NULL,
     team_code VARCHAR(50) NOT NULL UNIQUE,
     is_paid BOOLEAN NOT NULL,
+    order_id VARCHAR(255) UNIQUE,
     competition_id UUID NOT NULL REFERENCES competitions(id) ON DELETE CASCADE,
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW()
