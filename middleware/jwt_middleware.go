@@ -9,10 +9,14 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
-var nextAuthSecret = []byte(os.Getenv("JWT_SECRET_KEY"))
-
 func JWTAuthMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
+		nextAuthSecret := os.Getenv("JWT_SECRET_KEY")
+		if nextAuthSecret == "" {
+			c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": "JWT secret not configured"})
+			return
+		}
+
 		authHeader := c.GetHeader("Authorization")
 		if authHeader == "" || !strings.HasPrefix(authHeader, "Bearer ") {
 			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Missing or invalid Authorization header"})
@@ -26,7 +30,7 @@ func JWTAuthMiddleware() gin.HandlerFunc {
 			if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {
 				return nil, jwt.ErrSignatureInvalid
 			}
-			return nextAuthSecret, nil
+			return []byte(nextAuthSecret), nil
 		})
 
 		if err != nil || !token.Valid {
@@ -37,7 +41,6 @@ func JWTAuthMiddleware() gin.HandlerFunc {
 		// Optionally attach user claims to context
 		if claims, ok := token.Claims.(jwt.MapClaims); ok {
 			c.Set("user", claims)
-
 		}
 
 		c.Next()
