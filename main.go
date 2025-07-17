@@ -66,6 +66,7 @@ func main() {
 		protected.POST("/create-team", handlers.CreateTeamHandler(db))
 		protected.GET("/get-teams", handlers.GetUserCompetitionsHandler(db))
 		protected.POST("/join-team", handlers.JoinTeamHandler(db))
+		protected.DELETE("/delete-team-member", handlers.DeleteTeamMemberHandler(db))
 
 		api.GET("/qr/:value", handlers.GenerateQRHandler())
 		protected.GET("/get-qr-link/:teamCode", handlers.GetQRLinkHandler(db))
@@ -75,6 +76,7 @@ func main() {
 		protected.GET("/admin-all-teams", handlers.GetAllTeamsHandler(db))
 		protected.POST("/admin-add-competition", handlers.AddCompetitionHandler(db))
 		protected.POST("/admin-update-competition/:id", handlers.UpdateCompetitionHandler(db))
+		protected.DELETE("/admin-delete-competition/:id", handlers.DeleteCompetitionHandler(db))
 	}
 
 	// Use rs/cors to wrap the Gin engine
