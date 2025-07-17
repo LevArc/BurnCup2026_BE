@@ -20,6 +20,8 @@ type AddCompetitionRequest struct {
 	Description           string   `json:"description" binding:"required"`
 	Category              string   `json:"category" binding:"required"`
 	ImageUrl              string   `json:"imageUrl" binding:"required"`
+	BookletUrl            string   `json:"bookletUrl" binding:"required"`
+	PaidMessage           string   `json:"paidMessage" binding:"required"`
 	RegistrationStartDate string   `json:"registrationStartDate" binding:"required"`
 	RegistrationEndDate   string   `json:"registrationEndDate" binding:"required"`
 	CompetitionStartDate  string   `json:"competitionStartDate" binding:"required"`
@@ -56,14 +58,15 @@ func AddCompetitionHandler(db *sqlx.DB) gin.HandlerFunc {
 		var competitionID string
 		err = tx.QueryRowx(`
             INSERT INTO competitions (
-                name, description, category, image_url, 
+                name, description, category, image_url, booklet_url, paid_message,
                 registration_start_date, registration_end_date,
                 competition_start_date, competition_end_date,
                 competition_type, venue, registration_fee,
                 max_members, min_members, team_slot
-            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
+            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
             RETURNING id
         `, req.Name, req.Description, req.Category, req.ImageUrl,
+			req.BookletUrl, req.PaidMessage,
 			req.RegistrationStartDate, req.RegistrationEndDate,
 			req.CompetitionStartDate, req.CompetitionEndDate,
 			req.CompetitionType, req.Venue, req.RegistrationFee,

@@ -14,6 +14,8 @@ type Competition struct {
 	Description           string   `db:"description" json:"description"`
 	Category              string   `db:"category" json:"category"`
 	ImageURL              string   `db:"image_url" json:"imageUrl"`
+    BookletURL            string   `db:"booklet_url" json:"bookletUrl"`
+    PaidMessage           string   `db:"paid_message" json:"paidMessage"`
 	RegistrationStartDate string   `db:"registration_start_date" json:"registrationStartDate"`
 	RegistrationEndDate   string   `db:"registration_end_date" json:"registrationEndDate"`
 	CompetitionStartDate  string   `db:"competition_start_date" json:"competitionStartDate"`

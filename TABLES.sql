@@ -18,6 +18,8 @@ CREATE TABLE IF NOT EXISTS competitions (
     description TEXT NOT NULL,
     category VARCHAR(100) NOT NULL,
     image_url TEXT NOT NULL,
+    booklet_url TEXT NOT NULL,
+    paid_message TEXT NOT NULL,
     registration_start_date DATE NOT NULL,
     registration_end_date DATE NOT NULL,
     competition_start_date DATE NOT NULL,
@@ -57,6 +59,8 @@ CREATE TABLE IF NOT EXISTS registered_competitions (
     team_code VARCHAR(50) NOT NULL UNIQUE,
     is_paid BOOLEAN NOT NULL,
     order_id VARCHAR(255) UNIQUE,
+    qr_url TEXT,
+    valid_time TIMESTAMPTZ,
     competition_id UUID NOT NULL REFERENCES competitions(id) ON DELETE CASCADE,
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW()

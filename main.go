@@ -74,6 +74,7 @@ func main() {
 		protected.GET("/admin-competitions-statistics", handlers.GetAdminCompetitionStatisticHandler(db))
 		protected.GET("/admin-all-teams", handlers.GetAllTeamsHandler(db))
 		protected.POST("/admin-add-competition", handlers.AddCompetitionHandler(db))
+		protected.POST("/admin-update-competition/:id", handlers.UpdateCompetitionHandler(db))
 	}
 
 	// Use rs/cors to wrap the Gin engine
