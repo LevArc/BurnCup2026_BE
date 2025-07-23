@@ -2,7 +2,7 @@ CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 
 CREATE TABLE IF NOT EXISTS users (
     email VARCHAR(255) PRIMARY KEY, -- EMAIL AS PRIMARY KEY
-    binusian BOOLEAN NOT NULL,
+    user_type VARCHAR(255) NOT NULL, -- "Binusian", "SMA/SMK", "Others"
     full_name VARCHAR(255) NOT NULL,
     phone_number VARCHAR(20) NOT NULL,
     nim VARCHAR(50),

@@ -30,7 +30,7 @@ func GetCurrentUserHandler(db *sqlx.DB) gin.HandlerFunc {
 		}
 
 		var user models.User
-		if err := db.Get(&user, `SELECT email, binusian, full_name, phone_number, nim, major, school FROM users WHERE email=$1`, userEmail); err != nil {
+		if err := db.Get(&user, `SELECT email, user_type, full_name, phone_number, nim, major, school FROM users WHERE email=$1`, userEmail); err != nil {
 			c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
 			return
 		}

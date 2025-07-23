@@ -45,17 +45,12 @@ func JoinTeamHandler(db *sqlx.DB) gin.HandlerFunc {
 
 		// Find the team by code and check competition
 		var teamID, teamCompetitionID string
-		var isPaid bool
 		err := db.QueryRowx(
-			`SELECT id, competition_id, is_paid FROM registered_competitions WHERE team_code = $1`,
+			`SELECT id, competition_id FROM registered_competitions WHERE team_code = $1`,
 			teamCode,
-		).Scan(&teamID, &teamCompetitionID, &isPaid)
+		).Scan(&teamID, &teamCompetitionID)
 		if err != nil {
 			c.JSON(http.StatusNotFound, gin.H{"error": "Team not found"})
-			return
-		}
-		if isPaid {
-			c.JSON(http.StatusForbidden, gin.H{"error": "Cannot join a team that has already paid"})
 			return
 		}
 		if teamCompetitionID != req.CompetitionID {
@@ -80,20 +75,40 @@ func JoinTeamHandler(db *sqlx.DB) gin.HandlerFunc {
 			return
 		}
 
-		// Fetch competition type
+		// Fetch competition info including team slot
 		var competitionType string
-		err = db.Get(&competitionType, `SELECT competition_type FROM competitions WHERE id=$1`, teamCompetitionID)
+		var maxMembers *int
+		var teamSlot int
+		err = db.QueryRowx(
+			`SELECT competition_type, max_members, team_slot FROM competitions WHERE id=$1`,
+			teamCompetitionID,
+		).Scan(&competitionType, &maxMembers, &teamSlot)
 		if err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "Competition not found"})
 			return
 		}
 
+		// Check if team slots are full
+		var currentTeams int
+		err = db.Get(&currentTeams, `
+            SELECT COUNT(*) FROM registered_competitions 
+            WHERE competition_id = $1 AND is_paid = true
+        `, teamCompetitionID)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to check team slots"})
+			return
+		}
+
+		if currentTeams >= teamSlot {
+			c.JSON(http.StatusForbidden, gin.H{"error": "Competition team slots are full"})
+			return
+		}
+
 		// Fetch user info
-		var binusian bool
-		var nim, major, school *string
+		var userType string
 		err = db.QueryRowx(
-			`SELECT binusian, nim, major, school FROM users WHERE email=$1`, userEmail,
-		).Scan(&binusian, &nim, &major, &school)
+			`SELECT user_type FROM users WHERE email=$1`, userEmail,
+		).Scan(&userType)
 		if err != nil {
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "User profile not found"})
 			return
@@ -102,37 +117,34 @@ func JoinTeamHandler(db *sqlx.DB) gin.HandlerFunc {
 		// Check requirements based on competition type
 		switch competitionType {
 		case "Binusian":
-			if !binusian || nim == nil || major == nil {
-				c.JSON(http.StatusForbidden, gin.H{"error": "Only Binusian users with NIM and major can join this competition"})
+			if userType != "Binusian" {
+				c.JSON(http.StatusForbidden, gin.H{"error": "Only Binusian users can join this competition"})
 				return
 			}
-		case "NonBinusian":
-			if binusian || school == nil {
-				c.JSON(http.StatusForbidden, gin.H{"error": "Only Non-Binusian users with school can join this competition"})
+		case "SMA/SMK":
+			if userType != "SMA/SMK" {
+				c.JSON(http.StatusForbidden, gin.H{"error": "Only SMA/SMK users can join this competition"})
 				return
 			}
-		case "Mixed":
-			// No restriction for Mixed, but you can add additional checks if needed
+		case "SMA/SMK And Others (Non-Binusian)":
+			if userType != "SMA/SMK" && userType != "Others" {
+				c.JSON(http.StatusForbidden, gin.H{"error": "Only SMA/SMK and Other users (Non-Binusian) can join this competition"})
+				return
+			}
+		case "Public":
+			// No restriction for Public, but you can add additional checks if needed
 		default:
 			c.JSON(http.StatusBadRequest, gin.H{"error": "Unknown competition type"})
 			return
 		}
 
-		// Check max members for this competition
-		var maxMembers *int
-		err = db.Get(&maxMembers, `SELECT max_members FROM competitions WHERE id=$1`, teamCompetitionID)
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch max members"})
-			return
-		}
+		// Check max members for this specific team
 		if maxMembers != nil && *maxMembers > 0 {
 			var currentMembers int
 			err = db.Get(&currentMembers, `
-                SELECT COUNT(*) FROM registered_competition_members rcm
-                JOIN registered_competitions rc ON rc.id = rcm.registered_competition_id
-                WHERE rc.competition_id = $1
-                AND rcm.registered_competition_id = rc.id
-            `, teamCompetitionID)
+                SELECT COUNT(*) FROM registered_competition_members
+                WHERE registered_competition_id = $1
+            `, teamID)
 			if err != nil {
 				c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to count current team members"})
 				return

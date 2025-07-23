@@ -38,16 +38,16 @@ func CreateUserProfileHandler(db *sqlx.DB) gin.HandlerFunc {
 		req.Email = userEmail
 
 		_, err := db.Exec(
-			`INSERT INTO users (email, binusian, full_name, phone_number, nim, major, school)
+			`INSERT INTO users (email, user_type, full_name, phone_number, nim, major, school)
 			 VALUES ($1, $2, $3, $4, $5, $6, $7)
 			 ON CONFLICT (email) DO UPDATE SET
-				binusian=EXCLUDED.binusian,
+				user_type=EXCLUDED.user_type,
 				full_name=EXCLUDED.full_name,
 				phone_number=EXCLUDED.phone_number,
 				nim=EXCLUDED.nim,
 				major=EXCLUDED.major,
 				school=EXCLUDED.school`,
-			req.Email, req.Binusian, req.FullName, req.PhoneNumber, req.NIM, req.Major, req.School,
+			req.Email, req.UserType, req.FullName, req.PhoneNumber, req.NIM, req.Major, req.School,
 		)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create or update user"})

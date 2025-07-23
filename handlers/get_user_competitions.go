@@ -73,7 +73,7 @@ func GetUserCompetitionsHandler(db *sqlx.DB) gin.HandlerFunc {
 			// Get team leader
 			var teamLeader models.User
 			err = db.Get(&teamLeader, `
-                SELECT u.email, u.binusian, u.full_name, u.phone_number, u.nim, u.major, u.school
+                SELECT u.email, u.user_type, u.full_name, u.phone_number, u.nim, u.major, u.school
                 FROM users u
                 JOIN registered_competition_members rcm ON u.email = rcm.user_email
                 WHERE rcm.registered_competition_id = $1 AND rcm.is_team_leader = true
@@ -86,7 +86,7 @@ func GetUserCompetitionsHandler(db *sqlx.DB) gin.HandlerFunc {
 			// Get all members except the team leader
 			var members []models.User
 			err = db.Select(&members, `
-                SELECT u.email, u.binusian, u.full_name, u.phone_number, u.nim, u.major, u.school
+                SELECT u.email, u.user_type, u.full_name, u.phone_number, u.nim, u.major, u.school
                 FROM users u
                 JOIN registered_competition_members rcm ON u.email = rcm.user_email
                 WHERE rcm.registered_competition_id = $1 AND rcm.is_team_leader = false

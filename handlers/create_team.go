@@ -3,6 +3,7 @@ package handlers
 import (
 	"crypto/rand"
 	"encoding/hex"
+	"fmt"
 	"net/http"
 	"strings"
 
@@ -24,6 +25,34 @@ func generateTeamCode() (string, error) {
 		return "", err
 	}
 	return strings.ToUpper(hex.EncodeToString(b)), nil
+}
+
+// generateUniqueTeamCode generates a unique team code by checking database
+func generateUniqueTeamCode(db *sqlx.DB) (string, error) {
+	maxAttempts := 10
+	for i := 0; i < maxAttempts; i++ {
+		teamCode, err := generateTeamCode()
+		if err != nil {
+			return "", err
+		}
+
+		// Check if team code already exists
+		var exists bool
+		err = db.QueryRowx(`
+            SELECT EXISTS (
+                SELECT 1 FROM registered_competitions 
+                WHERE team_code = $1
+            )
+        `, teamCode).Scan(&exists)
+		if err != nil {
+			return "", err
+		}
+
+		if !exists {
+			return teamCode, nil
+		}
+	}
+	return "", fmt.Errorf("failed to generate unique team code after %d attempts", maxAttempts)
 }
 
 // CreateTeamHandler creates a new team with the current user as team leader
@@ -53,24 +82,40 @@ func CreateTeamHandler(db *sqlx.DB) gin.HandlerFunc {
 			return
 		}
 
-		// Fetch competition type and max_members
+		// Fetch competition info
 		var competitionType string
 		var maxMembers *int
+		var teamSlot int
 		err := db.QueryRowx(
-			`SELECT competition_type, max_members FROM competitions WHERE id=$1`,
+			`SELECT competition_type, max_members, team_slot FROM competitions WHERE id=$1`,
 			req.CompetitionID,
-		).Scan(&competitionType, &maxMembers)
+		).Scan(&competitionType, &maxMembers, &teamSlot)
 		if err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "Competition not found"})
 			return
 		}
 
+		// Check if team slots are full
+		var currentTeams int
+		err = db.Get(&currentTeams, `
+            SELECT COUNT(*) FROM registered_competitions 
+            WHERE competition_id = $1 AND is_paid = true
+        `, req.CompetitionID)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to check team slots"})
+			return
+		}
+
+		if currentTeams >= teamSlot {
+			c.JSON(http.StatusForbidden, gin.H{"error": "Competition team slots are full"})
+			return
+		}
+
 		// Fetch user info
-		var binusian bool
-		var nim, major, school *string
+		var userType string
 		err = db.QueryRowx(
-			`SELECT binusian, nim, major, school FROM users WHERE email=$1`, userEmail,
-		).Scan(&binusian, &nim, &major, &school)
+			`SELECT user_type FROM users WHERE email=$1`, userEmail,
+		).Scan(&userType)
 		if err != nil {
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "User profile not found"})
 			return
@@ -78,46 +123,50 @@ func CreateTeamHandler(db *sqlx.DB) gin.HandlerFunc {
 
 		// Check requirements based on competition type
 		switch competitionType {
-		case "Binusian":
-			if !binusian || nim == nil || major == nil {
-				c.JSON(http.StatusForbidden, gin.H{"error": "Only Binusian users with NIM and major can join this competition"})
+			case "Binusian":
+				if userType != "Binusian" {
+					c.JSON(http.StatusForbidden, gin.H{"error": "Only Binusian users can join this competition"})
+					return
+				}
+			case "SMA/SMK":
+				if userType != "SMA/SMK" {
+					c.JSON(http.StatusForbidden, gin.H{"error": "Only SMA/SMK users can join this competition"})
+					return
+				}
+			case "SMA/SMK And Others (Non-Binusian)":
+				if userType != "SMA/SMK" && userType != "Others" {
+					c.JSON(http.StatusForbidden, gin.H{"error": "Only SMA/SMK and Other users (Non-Binusian) can join this competition"})
+					return
+				}
+			case "Public":
+				// No restriction for Public, but you can add additional checks if needed
+			default:
+				c.JSON(http.StatusBadRequest, gin.H{"error": "Unknown competition type"})
 				return
-			}
-		case "NonBinusian":
-			if binusian || school == nil {
-				c.JSON(http.StatusForbidden, gin.H{"error": "Only Non-Binusian users with school can join this competition"})
-				return
-			}
-		case "Mixed":
-			// No restriction for Mixed, but you can add additional checks if needed
-		default:
-			c.JSON(http.StatusBadRequest, gin.H{"error": "Unknown competition type"})
+		}
+
+		// Check if user has already joined this competition
+		var existingTeamCount int
+		err = db.Get(&existingTeamCount, `
+            SELECT COUNT(*) 
+            FROM registered_competition_members rcm
+            JOIN registered_competitions rc ON rc.id = rcm.registered_competition_id
+            WHERE rc.competition_id = $1 AND rcm.user_email = $2
+        `, req.CompetitionID, userEmail)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to check existing participation"})
 			return
 		}
 
-		// Check max members for this competition
-		if maxMembers != nil && *maxMembers > 0 {
-			var currentMembers int
-			err = db.Get(&currentMembers, `
-                SELECT COUNT(*) FROM registered_competition_members rcm
-                JOIN registered_competitions rc ON rc.id = rcm.registered_competition_id
-                WHERE rc.competition_id = $1
-                AND rcm.registered_competition_id = rc.id
-            `, req.CompetitionID)
-			if err != nil {
-				c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to count current team members"})
-				return
-			}
-			if currentMembers >= *maxMembers {
-				c.JSON(http.StatusForbidden, gin.H{"error": "Maximum number of team members reached"})
-				return
-			}
+		if existingTeamCount > 0 {
+			c.JSON(http.StatusConflict, gin.H{"error": "You have already joined this competition"})
+			return
 		}
 
-		// Generate random team code
-		teamCode, err := generateTeamCode()
+		// Generate unique team code
+		teamCode, err := generateUniqueTeamCode(db)
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate team code"})
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate unique team code"})
 			return
 		}
 

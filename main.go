@@ -10,21 +10,22 @@ import (
 	"github.com/NotchG/BurnCup/middleware"
 	"github.com/gin-gonic/gin"
 	"github.com/jmoiron/sqlx"
-	"github.com/joho/godotenv"
+
+	// "github.com/joho/godotenv"
 	_ "github.com/lib/pq"
 	"github.com/rs/cors"
 )
 
 func main() {
-	// Load environment variables from .env file
-	if err := godotenv.Load(); err != nil {
-		log.Println("No .env file found or error loading .env file")
-	}
+	// // Load environment variables from .env file
+	// if err := godotenv.Load(); err != nil {
+	// 	log.Println("No .env file found or error loading .env file")
+	// }
 
 	// Example DSN: "host=localhost port=5432 user=postgres password=yourpassword dbname=yourdb sslmode=disable"
 	dsn := os.Getenv("POSTGRES_DSN")
 	if dsn == "" {
-		dsn = "host=postgres port=5432 user=postgres password=postgres dbname=burncup_dev sslmode=disable"
+		log.Fatal("POSTGRES_DSN environment variable is not set")
 	}
 
 	db, err := sqlx.Connect("postgres", dsn)
@@ -53,6 +54,9 @@ func main() {
 		api.GET("/competitions", handlers.GetCompetitionsHandler(db))
 
 		api.GET("/competitions/:id", handlers.GetCompetitionByIDHandler(db))
+		api.GET("/get-remaining-team-slot/:competitionId", handlers.GetRemainingTeamSlotHandler(db))
+
+		api.POST("/midtrans/hook", handlers.MidtransWebhookHandler(db))
 
 		protected := api.Group("/protected")
 		protected.Use(middleware.JWTAuthMiddleware())
@@ -67,6 +71,7 @@ func main() {
 		protected.GET("/get-teams", handlers.GetUserCompetitionsHandler(db))
 		protected.POST("/join-team", handlers.JoinTeamHandler(db))
 		protected.DELETE("/delete-team-member", handlers.DeleteTeamMemberHandler(db))
+		api.GET("/ping-is-paid-team-slot/:teamId", handlers.PingIsPaidTeamSlotHandler(db))
 
 		api.GET("/qr/:value", handlers.GenerateQRHandler())
 		protected.GET("/get-qr-link/:teamCode", handlers.GetQRLinkHandler(db))
@@ -77,19 +82,20 @@ func main() {
 		protected.POST("/admin-add-competition", handlers.AddCompetitionHandler(db))
 		protected.POST("/admin-update-competition/:id", handlers.UpdateCompetitionHandler(db))
 		protected.DELETE("/admin-delete-competition/:id", handlers.DeleteCompetitionHandler(db))
+		protected.DELETE("/admin-delete-team/:id", handlers.DeleteTeamHandler(db))
 	}
 
 	// Use rs/cors to wrap the Gin engine
 	corsHandler := cors.New(cors.Options{
-		AllowedOrigins:   []string{"http://localhost:3000", "http://host.docker.internal:3000", "https://burncuptesting.notchgnas.com", "http://localhost:3001"},
+		AllowedOrigins:   []string{"http://localhost:3000", "http://host.docker.internal:3000", "https://burncuptesting.notchgnas.com", "http://localhost:3001", "https://burncup.notchgnas.com", "https://burncup-fe-341997010337.asia-southeast1.run.app", "https://burncup-backend-341997010337.asia-southeast1.run.app", "https://burncup.com"},
 		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 		AllowedHeaders:   []string{"Origin", "Authorization", "Content-Type"},
 		ExposedHeaders:   []string{"Content-Length"},
 		AllowCredentials: true,
 	})
 
-	log.Println("Server is running on port 8000")
-	if err := http.ListenAndServe("0.0.0.0:8000", corsHandler.Handler(r)); err != nil {
+	log.Println("Server is running on port 8080")
+	if err := http.ListenAndServe("0.0.0.0:8080", corsHandler.Handler(r)); err != nil {
 		log.Fatal("Failed to start server:", err)
 	}
 }

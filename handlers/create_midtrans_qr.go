@@ -45,7 +45,7 @@ func CreateMidtransQR(db *sqlx.DB, orderID string, amount float64) (*QRResponse,
 
 	// Initialize client
 	c := coreapi.Client{}
-	c.New(os.Getenv("MIDTRANS_SERVER_KEY"), midtrans.Sandbox)
+	c.New(os.Getenv("MIDTRANS_SERVER_KEY"), midtrans.Production)
 
 	// Ensure phone number format is correct for Indonesia
 	phone := teamLeader.PhoneNumber

@@ -11,7 +11,8 @@ import (
 type AdminBasicInfoResponse struct {
     TotalUsers         int `json:"totalUsers"`
     BinusianUsers      int `json:"binusianUsers"`
-    NonBinusianUsers   int `json:"nonBinusianUsers"`
+    SMAUsers           int `json:"smaUsers"`
+    OtherUsers         int `json:"otherUsers"`
     TotalTeams         int `json:"totalTeams"`
     ActiveCompetitions int `json:"activeCompetitions"`
     UpcomingEvents     int `json:"upcomingEvents"`
@@ -22,12 +23,13 @@ type AdminBasicInfoResponse struct {
 // GetAdminBasicInfoHandler returns basic admin dashboard info
 func GetAdminBasicInfoHandler(db *sqlx.DB) gin.HandlerFunc {
     return func(c *gin.Context) {
-        var totalUsers, binusianUsers, nonBinusianUsers, totalTeams, activeCompetitions, upcomingEvents, totalParticipants, categoryCount int
+        var totalUsers, binusianUsers, smaUsers, otherUsers, totalTeams, activeCompetitions, upcomingEvents, totalParticipants, categoryCount int
 
         // Total users
         _ = db.Get(&totalUsers, `SELECT COUNT(*) FROM users`)
-        _ = db.Get(&binusianUsers, `SELECT COUNT(*) FROM users WHERE binusian = true`)
-        _ = db.Get(&nonBinusianUsers, `SELECT COUNT(*) FROM users WHERE binusian = false`)
+        _ = db.Get(&binusianUsers, `SELECT COUNT(*) FROM users WHERE user_type = 'Binusian'`)
+        _ = db.Get(&smaUsers, `SELECT COUNT(*) FROM users WHERE user_type = 'SMA/SMK'`)
+        _ = db.Get(&otherUsers, `SELECT COUNT(*) FROM users WHERE user_type = 'Others'`)
 
         // Total teams
         _ = db.Get(&totalTeams, `SELECT COUNT(*) FROM registered_competitions`)
@@ -47,7 +49,8 @@ func GetAdminBasicInfoHandler(db *sqlx.DB) gin.HandlerFunc {
         c.JSON(http.StatusOK, AdminBasicInfoResponse{
             TotalUsers:         totalUsers,
             BinusianUsers:      binusianUsers,
-            NonBinusianUsers:   nonBinusianUsers,
+            SMAUsers:           smaUsers,
+            OtherUsers:         otherUsers,
             TotalTeams:         totalTeams,
             ActiveCompetitions: activeCompetitions,
             UpcomingEvents:     upcomingEvents,
