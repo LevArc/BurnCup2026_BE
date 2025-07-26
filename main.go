@@ -82,7 +82,7 @@ func main() {
 		protected.POST("/admin-add-competition", handlers.AddCompetitionHandler(db))
 		protected.POST("/admin-update-competition/:id", handlers.UpdateCompetitionHandler(db))
 		protected.DELETE("/admin-delete-competition/:id", handlers.DeleteCompetitionHandler(db))
-		protected.DELETE("/admin-delete-team/:id", handlers.DeleteTeamHandler(db))
+		protected.DELETE("/admin-delete-team/:teamCode", handlers.DeleteTeamHandler(db))
 	}
 
 	// Use rs/cors to wrap the Gin engine
