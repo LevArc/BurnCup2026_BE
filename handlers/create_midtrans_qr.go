@@ -21,6 +21,11 @@ type QRResponse struct {
 func CreateMidtransQR(db *sqlx.DB, orderID string, amount float64) (*QRResponse, error) {
 	log.Printf("CreateMidtransQR called with orderID: %s, amount: %.2f", orderID, amount)
 
+	midtransEnvironment := midtrans.Production
+	if strings.EqualFold(os.Getenv("MIDTRANS_ENV"), "sandbox") {
+		midtransEnvironment = midtrans.Sandbox
+	}
+
 	// Parse team code from orderID (format: qris-TeamCode-UnixTime)
 	parts := strings.Split(orderID, "-")
 	if len(parts) < 3 {
@@ -45,7 +50,12 @@ func CreateMidtransQR(db *sqlx.DB, orderID string, amount float64) (*QRResponse,
 
 	// Initialize client
 	c := coreapi.Client{}
-	c.New(os.Getenv("MIDTRANS_SERVER_KEY"), midtrans.Production)
+	c.New(os.Getenv("MIDTRANS_SERVER_KEY"), midtransEnvironment)
+
+	if notificationURL := os.Getenv("MIDTRANS_NOTIFICATION_URL"); notificationURL != "" {
+		c.Options.SetPaymentOverrideNotification(notificationURL)
+		log.Printf("Using Midtrans notification URL: %s", notificationURL)
+	}
 
 	// Ensure phone number format is correct for Indonesia
 	phone := teamLeader.PhoneNumber
