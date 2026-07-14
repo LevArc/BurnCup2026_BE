@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"encoding/json"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -9,25 +10,27 @@ import (
 
 // UpdateCompetitionRequest represents the request body for updating a competition
 type UpdateCompetitionRequest struct {
-	Name                  string   `json:"name"`
-	Description           string   `json:"description"`
-	Category              string   `json:"category"`
-	ImageUrl              string   `json:"imageUrl"`
-	BookletUrl            string   `json:"bookletUrl"`
-	PaidMessage           string   `json:"paidMessage"`
-	RegistrationStartDate string   `json:"registrationStartDate"`
-	RegistrationEndDate   string   `json:"registrationEndDate"`
-	CompetitionStartDate  string   `json:"competitionStartDate"`
-	CompetitionEndDate    string   `json:"competitionEndDate"`
-	CompetitionType       string   `json:"competitionType"`
-	Venue                 string   `json:"venue"`
-	RegistrationFee       int      `json:"registrationfee"`
-	Prizes                []Prize  `json:"prizes"`
-	Requirements          []string `json:"requirements"`
-	Rules                 []string `json:"rules"`
-	MaxMembers            *int     `json:"maxMembers"`
-	MinMembers            *int     `json:"minMembers"`
-	TeamSlot              int      `json:"teamSlot"`
+	Name                  string          `json:"name"`
+	Description           string          `json:"description"`
+	Category              string          `json:"category"`
+	ImageUrl              string          `json:"imageUrl"`
+	BookletUrl            string          `json:"bookletUrl"`
+	PaidMessage           string          `json:"paidMessage"`
+	RegistrationStartDate string          `json:"registrationStartDate"`
+	RegistrationEndDate   string          `json:"registrationEndDate"`
+	CompetitionStartDate  string          `json:"competitionStartDate"`
+	CompetitionEndDate    string          `json:"competitionEndDate"`
+	CompetitionType       string          `json:"competitionType"`
+	Venue                 string          `json:"venue"`
+	RegistrationFee       int             `json:"registrationfee"`
+	Prizes                []Prize         `json:"prizes"`
+	Requirements          []string        `json:"requirements"`
+	Rules                 []string        `json:"rules"`
+	MaxMembers            *int            `json:"maxMembers"`
+	MinMembers            *int            `json:"minMembers"`
+	TeamSlot              int             `json:"teamSlot"`
+	FAQ                   json.RawMessage `json:"faq"`
+	Timeline              json.RawMessage `json:"timeline"`
 }
 
 // UpdateCompetitionHandler updates an existing competition with associated prizes, requirements, and rules
@@ -43,6 +46,13 @@ func UpdateCompetitionHandler(db *sqlx.DB) gin.HandlerFunc {
 		if err := c.ShouldBindJSON(&req); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body"})
 			return
+		}
+
+		if len(req.FAQ) == 0 {
+			req.FAQ = json.RawMessage(`{}`)
+		}
+		if len(req.Timeline) == 0 {
+			req.Timeline = json.RawMessage(`[]`)
 		}
 
 		// Check if competition exists
@@ -83,7 +93,9 @@ func UpdateCompetitionHandler(db *sqlx.DB) gin.HandlerFunc {
                 registration_fee = $14,
                 max_members = $15,
                 min_members = $16,
-                team_slot = $17,
+				team_slot = $17,
+				faq = $18,
+				timeline = $19,
                 updated_at = NOW()
             WHERE id = $1`,
 			competitionID,
@@ -103,6 +115,8 @@ func UpdateCompetitionHandler(db *sqlx.DB) gin.HandlerFunc {
 			req.MaxMembers,
 			req.MinMembers,
 			req.TeamSlot,
+			req.FAQ,
+			req.Timeline,
 		)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update competition"})

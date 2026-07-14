@@ -32,6 +32,8 @@ CREATE TABLE IF NOT EXISTS competitions (
     max_members INTEGER,
     min_members INTEGER,
     team_slot INTEGER NOT NULL,
+    faq JSONB NOT NULL DEFAULT '{}'::jsonb,
+    timeline JSONB NOT NULL DEFAULT '[]'::jsonb,
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
