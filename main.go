@@ -64,6 +64,16 @@ func main() {
 			c.JSON(200, gin.H{"message": "You are authorized to access this protected endpoint"})
 		})
 
+		auth := api.Group("/auth")
+		{
+			// Note: You will need to update the handlers we wrote earlier
+			// to accept the 'db' connection just like your other handlers do.
+			auth.POST("/register", handlers.RegisterHandler(db))
+			auth.POST("/login", handlers.LoginHandler(db))
+			auth.GET("/google", handlers.GoogleLoginHandler())
+			auth.GET("/google/callback", handlers.GoogleCallbackHandler(db))
+		}
+
 		protected.GET("/get-current-user", handlers.GetCurrentUserHandler(db))
 		protected.POST("/create-update-user-profile", handlers.CreateUserProfileHandler(db))
 

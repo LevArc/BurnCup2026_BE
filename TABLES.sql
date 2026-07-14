@@ -1,10 +1,12 @@
 CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 
 CREATE TABLE IF NOT EXISTS users (
-    email VARCHAR(255) PRIMARY KEY, -- EMAIL AS PRIMARY KEY
-    user_type VARCHAR(255) NOT NULL, -- "Binusian", "SMA/SMK", "Others"
-    full_name VARCHAR(255) NOT NULL,
-    phone_number VARCHAR(20) NOT NULL,
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(), -- NEW: UUID as Primary Key
+    email VARCHAR(255) UNIQUE NOT NULL,            -- CHANGED: Unique, but no longer the PK
+    password VARCHAR(255),                         -- NEW: Hashed password storage
+    user_type VARCHAR(255),                        -- CHANGED: Dropped NOT NULL (filled later)
+    full_name VARCHAR(255),                        -- CHANGED: Dropped NOT NULL (filled later)
+    phone_number VARCHAR(20),                      -- CHANGED: Dropped NOT NULL (filled later)
     nim VARCHAR(50),
     major VARCHAR(100),
     school VARCHAR(100),
@@ -68,7 +70,7 @@ CREATE TABLE IF NOT EXISTS registered_competitions (
 
 CREATE TABLE IF NOT EXISTS registered_competition_members (
     registered_competition_id UUID NOT NULL REFERENCES registered_competitions(id) ON DELETE CASCADE,
-    user_email VARCHAR(255) NOT NULL REFERENCES users(email) ON DELETE CASCADE, -- CHANGED FROM user_id TO user_email
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE, -- CHANGED: Now references users(id)
     is_team_leader BOOLEAN NOT NULL DEFAULT FALSE,
-    PRIMARY KEY (registered_competition_id, user_email)
+    PRIMARY KEY (registered_competition_id, user_id)              -- CHANGED: Updated composite PK
 );
