@@ -3,16 +3,18 @@ package models
 // User represents the database model for a user
 type User struct {
     ID          string  `db:"id" json:"id"` 
-    UserType    string  `db:"user_type" json:"userType"` 
-    FullName    string  `db:"full_name" json:"fullName"`
-    PhoneNumber string  `db:"phone_number" json:"phoneNumber"`
+    UserType    *string `db:"user_type" json:"userType,omitempty"` 
     Email       string  `db:"email" json:"email"`
     Password    string  `db:"password" json:"-"` 
+    
+    // Changed to pointers to handle NULLs
+    FullName    *string `db:"full_name" json:"fullName,omitempty"`
+    PhoneNumber *string `db:"phone_number" json:"phoneNumber,omitempty"`
+    
     NIM         *string `db:"nim" json:"nim,omitempty"`
     Major       *string `db:"major" json:"major,omitempty"`
     School      *string `db:"school" json:"school,omitempty"`
 }
-
 // RegisterRequest ONLY requires the essentials for sign-up
 type RegisterRequest struct {
     Email    string `json:"email" binding:"required,email"`

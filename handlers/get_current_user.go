@@ -2,7 +2,7 @@ package handlers
 
 import (
 	"net/http"
-
+	"fmt"
 	"github.com/NotchG/BurnCup/models"
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
@@ -30,7 +30,8 @@ func GetCurrentUserHandler(db *sqlx.DB) gin.HandlerFunc {
 		}
 
 		var user models.User
-		if err := db.Get(&user, `SELECT email, user_type, full_name, phone_number, nim, major, school FROM users WHERE email=$1`, userEmail); err != nil {
+		if err := db.Get(&user, `SELECT id, email, user_type, full_name, phone_number, nim, major, school FROM users WHERE email=$1`, userEmail); err != nil {
+			fmt.Printf("DEBUG - SQLX Error: %v\nDEBUG - Email searched: '%s'\n", err, userEmail)
 			c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
 			return
 		}

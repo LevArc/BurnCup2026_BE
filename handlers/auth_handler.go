@@ -19,10 +19,10 @@ import (
 
 // Define the OAuth configuration globally
 var googleOauthConfig = &oauth2.Config{
-	ClientID:     "253415571924-8t5u5e2ai416ms9pirvfb4s3c6ocmure.apps.googleusercontent.com",     // Load from environment
-	ClientSecret: "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", // Load from environment
+	ClientID:     "253415571924-8t5u5e2ai416ms9pirvfb4s3c6ocmure.apps.googleusercontent.com", // Load from environment
+	ClientSecret: "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",                                      // Load from environment
 	// Make sure this matches your Authorized Redirect URIs in Google Cloud Console
-	RedirectURL:  "http://localhost:8080/api/auth/google/callback", 
+	RedirectURL: "http://localhost:8080/api/auth/google/callback",
 	Scopes: []string{
 		"https://www.googleapis.com/auth/userinfo.email",
 		"https://www.googleapis.com/auth/userinfo.profile",
@@ -54,7 +54,7 @@ func RegisterHandler(db *sqlx.DB) gin.HandlerFunc {
 		var newUserID string
 		query := `INSERT INTO users (email, password) VALUES ($1, $2) RETURNING id`
 		err = db.QueryRow(query, req.Email, string(hashedPassword)).Scan(&newUserID)
-		
+
 		if err != nil {
 			// If error occurs, it's highly likely a duplicate email constraint violation
 			c.JSON(http.StatusConflict, gin.H{"error": "Email is already registered"})
@@ -184,7 +184,7 @@ func GoogleCallbackHandler(db *sqlx.DB) gin.HandlerFunc {
 		}
 
 		// Redirect to frontend (Update this to your actual Next.js / React URL)
-		frontendURL := "http://localhost:3000/auth-success?token=" + appToken
+		frontendURL := "http://localhost:5173/auth-success?token=" + appToken
 		c.Redirect(http.StatusTemporaryRedirect, frontendURL)
 	}
 }
@@ -199,10 +199,10 @@ func generateJWT(userID string, email string) (string, error) {
 	}
 
 	claims := jwt.MapClaims{
-		"sub":   userID,                                // User's UUID
-		"email": email,                                 // User's Email
-		"exp":   time.Now().Add(time.Hour * 24 * 30).Unix(), 
-		"iat":   time.Now().Unix(),                     // Issued at
+		"sub":   userID, // User's UUID
+		"email": email,  // User's Email
+		"exp":   time.Now().Add(time.Hour * 24 * 30).Unix(),
+		"iat":   time.Now().Unix(), // Issued at
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
