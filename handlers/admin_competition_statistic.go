@@ -9,30 +9,32 @@ import (
 
 // CompetitionStats matches the frontend interface for competition statistics
 type CompetitionStats struct {
-	ID                string `json:"id"`
-	Name              string `json:"name"`
-	Category          string `json:"category"`
-	TotalTeams        int    `json:"totalTeams"`
-	TotalParticipants int    `json:"totalParticipants"`
-	PaidTeams         int    `json:"paidTeams"`
-	PendingTeams      int    `json:"pendingTeams"`
-	RegistrationFee   int    `json:"registrationFee"`
-	CompetitionType   string `json:"competitionType"`
+	ID                         string `json:"id"`
+	Name                       string `json:"name"`
+	Category                   string `json:"category"`
+	TotalTeams                 int    `json:"totalTeams"`
+	TotalParticipants          int    `json:"totalParticipants"`
+	PaidTeams                  int    `json:"paidTeams"`
+	PendingTeams               int    `json:"pendingTeams"`
+	BinusianRegistrationFee    int    `json:"binusianRegistrationFee"`
+	NonBinusianRegistrationFee int    `json:"nonBinusianRegistrationFee"`
+	CompetitionType            string `json:"competitionType"`
 }
 
 // GetAdminCompetitionStatisticHandler returns detailed stats for each competition
 func GetAdminCompetitionStatisticHandler(db *sqlx.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		type competitionRow struct {
-			ID              string `db:"id"`
-			Name            string `db:"name"`
-			Category        string `db:"category"`
-			RegistrationFee int    `db:"registration_fee"`
-			CompetitionType string `db:"competition_type"`
+			ID                         string `db:"id"`
+			Name                       string `db:"name"`
+			Category                   string `db:"category"`
+			BinusianRegistrationFee    int    `db:"binusian_registration_fee"`
+			NonBinusianRegistrationFee int    `db:"non_binusian_registration_fee"`
+			CompetitionType            string `db:"competition_type"`
 		}
 		var competitions []competitionRow
 		err := db.Select(&competitions, `
-            SELECT id, name, category, registration_fee, competition_type
+            SELECT id, name, category, binusian_registration_fee, non_binusian_registration_fee, competition_type
             FROM competitions
             ORDER BY name
         `)
@@ -72,15 +74,16 @@ func GetAdminCompetitionStatisticHandler(db *sqlx.DB) gin.HandlerFunc {
             `, comp.ID)
 
 			stats = append(stats, CompetitionStats{
-				ID:                comp.ID,
-				Name:              comp.Name,
-				Category:          comp.Category,
-				TotalTeams:        totalTeams,
-				TotalParticipants: totalParticipants,
-				PaidTeams:         paidTeams,
-				PendingTeams:      pendingTeams,
-				RegistrationFee:   comp.RegistrationFee,
-				CompetitionType:   comp.CompetitionType,
+				ID:                         comp.ID,
+				Name:                       comp.Name,
+				Category:                   comp.Category,
+				TotalTeams:                 totalTeams,
+				TotalParticipants:          totalParticipants,
+				PaidTeams:                  paidTeams,
+				PendingTeams:               pendingTeams,
+				BinusianRegistrationFee:    comp.BinusianRegistrationFee,
+				NonBinusianRegistrationFee: comp.NonBinusianRegistrationFee,
+				CompetitionType:            comp.CompetitionType,
 			})
 		}
 

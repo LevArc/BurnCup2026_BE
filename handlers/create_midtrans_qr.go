@@ -163,19 +163,20 @@ type Competition struct {
 func getTeamLeaderAndCompetition(db *sqlx.DB, teamCode string) (*TeamLeader, *Competition, error) {
 	log.Printf("Querying database for team code: %s", teamCode)
 
+	// CHANGED: Updated the JOIN condition from rcm.user_email = u.email to rcm.user_id = u.id
 	query := `
-        SELECT 
-            u.email,
-            u.full_name,
-            u.phone_number,
-            c.id::text,
-            c.name
-        FROM registered_competitions rc
-        JOIN registered_competition_members rcm ON rc.id = rcm.registered_competition_id
-        JOIN users u ON rcm.user_email = u.email
-        JOIN competitions c ON rc.competition_id = c.id
-        WHERE rc.team_code = $1 AND rcm.is_team_leader = true
-    `
+		SELECT 
+			u.email,
+			u.full_name,
+			u.phone_number,
+			c.id::text,
+			c.name
+		FROM registered_competitions rc
+		JOIN registered_competition_members rcm ON rc.id = rcm.registered_competition_id
+		JOIN users u ON rcm.user_id = u.id
+		JOIN competitions c ON rc.competition_id = c.id
+		WHERE rc.team_code = $1 AND rcm.is_team_leader = true
+	`
 
 	var teamLeader TeamLeader
 	var competition Competition

@@ -21,7 +21,7 @@ func GetCompetitionByIDHandler(db *sqlx.DB) gin.HandlerFunc {
 				id, name, description, category, image_url, booklet_url, paid_message,
 				registration_start_date, registration_end_date,
 				competition_start_date, competition_end_date,
-				competition_type, venue, registration_fee,
+				competition_type, venue, binusian_registration_fee, non_binusian_registration_fee,
 				max_members, min_members, team_slot,
 				faq, timeline, created_at, updated_at
 			FROM competitions
@@ -47,7 +47,8 @@ func GetCompetitionByIDHandler(db *sqlx.DB) gin.HandlerFunc {
 			&competition.CompetitionEndDate,
 			&competition.CompetitionType,
 			&competition.Venue,
-			&competition.RegistrationFee,
+			&competition.BinusianRegistrationFee,
+			&competition.NonBinusianRegistrationFee,
 			&maxMembers,
 			&minMembers,
 			&competition.TeamSlot,

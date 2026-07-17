@@ -10,27 +10,28 @@ import (
 
 // UpdateCompetitionRequest represents the request body for updating a competition
 type UpdateCompetitionRequest struct {
-	Name                  string          `json:"name"`
-	Description           string          `json:"description"`
-	Category              string          `json:"category"`
-	ImageUrl              string          `json:"imageUrl"`
-	BookletUrl            string          `json:"bookletUrl"`
-	PaidMessage           string          `json:"paidMessage"`
-	RegistrationStartDate string          `json:"registrationStartDate"`
-	RegistrationEndDate   string          `json:"registrationEndDate"`
-	CompetitionStartDate  string          `json:"competitionStartDate"`
-	CompetitionEndDate    string          `json:"competitionEndDate"`
-	CompetitionType       string          `json:"competitionType"`
-	Venue                 string          `json:"venue"`
-	RegistrationFee       int             `json:"registrationfee"`
-	Prizes                []Prize         `json:"prizes"`
-	Requirements          []string        `json:"requirements"`
-	Rules                 []string        `json:"rules"`
-	MaxMembers            *int            `json:"maxMembers"`
-	MinMembers            *int            `json:"minMembers"`
-	TeamSlot              int             `json:"teamSlot"`
-	FAQ                   json.RawMessage `json:"faq"`
-	Timeline              json.RawMessage `json:"timeline"`
+	Name                       string          `json:"name"`
+	Description                string          `json:"description"`
+	Category                   string          `json:"category"`
+	ImageUrl                   string          `json:"imageUrl"`
+	BookletUrl                 string          `json:"bookletUrl"`
+	PaidMessage                string          `json:"paidMessage"`
+	RegistrationStartDate      string          `json:"registrationStartDate"`
+	RegistrationEndDate        string          `json:"registrationEndDate"`
+	CompetitionStartDate       string          `json:"competitionStartDate"`
+	CompetitionEndDate         string          `json:"competitionEndDate"`
+	CompetitionType            string          `json:"competitionType"`
+	Venue                      string          `json:"venue"`
+	BinusianRegistrationFee    int             `json:"binusianRegistrationFee"`
+	NonBinusianRegistrationFee int             `json:"nonBinusianRegistrationFee"`
+	Prizes                     []Prize         `json:"prizes"`
+	Requirements               []string        `json:"requirements"`
+	Rules                      []string        `json:"rules"`
+	MaxMembers                 *int            `json:"maxMembers"`
+	MinMembers                 *int            `json:"minMembers"`
+	TeamSlot                   int             `json:"teamSlot"`
+	FAQ                        json.RawMessage `json:"faq"`
+	Timeline                   json.RawMessage `json:"timeline"`
 }
 
 // UpdateCompetitionHandler updates an existing competition with associated prizes, requirements, and rules
@@ -90,12 +91,13 @@ func UpdateCompetitionHandler(db *sqlx.DB) gin.HandlerFunc {
                 competition_end_date = $11,
                 competition_type = $12,
                 venue = $13,
-                registration_fee = $14,
-                max_members = $15,
-                min_members = $16,
-				team_slot = $17,
-				faq = $18,
-				timeline = $19,
+				binusian_registration_fee = $14,
+				non_binusian_registration_fee = $15,
+				max_members = $16,
+				min_members = $17,
+				team_slot = $18,
+				faq = $19,
+				timeline = $20,
                 updated_at = NOW()
             WHERE id = $1`,
 			competitionID,
@@ -111,7 +113,8 @@ func UpdateCompetitionHandler(db *sqlx.DB) gin.HandlerFunc {
 			req.CompetitionEndDate,
 			req.CompetitionType,
 			req.Venue,
-			req.RegistrationFee,
+			req.BinusianRegistrationFee,
+			req.NonBinusianRegistrationFee,
 			req.MaxMembers,
 			req.MinMembers,
 			req.TeamSlot,

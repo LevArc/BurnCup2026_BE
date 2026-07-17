@@ -52,7 +52,7 @@ func GetQRLinkHandler(db *sqlx.DB) gin.HandlerFunc {
 			return
 		}
 
-		if teamInfo.MinMembers != nil && currentMembers + 1 < *teamInfo.MinMembers {
+		if teamInfo.MinMembers != nil && currentMembers+1 < *teamInfo.MinMembers {
 			c.JSON(http.StatusForbidden, gin.H{
 				"error":           fmt.Sprintf("Team must have at least %d members to proceed with payment", *teamInfo.MinMembers),
 				"currentMembers":  currentMembers,
@@ -105,14 +105,23 @@ func GetQRLinkHandler(db *sqlx.DB) gin.HandlerFunc {
 		now := strconv.FormatInt(time.Now().Unix(), 10)
 		qrValue := fmt.Sprintf("qr-%s-%s", teamCode, now)
 
-		// Get registration_fee from the competition
+		// Pick registration fee using team leader user type.
 		var registrationFee int
 		err = db.Get(&registrationFee, `
-            SELECT c.registration_fee 
-            FROM competitions c
-            JOIN registered_competitions rc ON c.id = rc.competition_id
-            WHERE rc.team_code = $1
-        `, teamCode)
+			SELECT COALESCE(
+				CASE
+					WHEN u.user_type = 'Binusian' THEN c.binusian_registration_fee
+					ELSE c.non_binusian_registration_fee
+				END,
+				c.non_binusian_registration_fee
+			)
+			FROM competitions c
+			JOIN registered_competitions rc ON c.id = rc.competition_id
+			LEFT JOIN registered_competition_members rcm
+				ON rcm.registered_competition_id = rc.id AND rcm.is_team_leader = true
+			LEFT JOIN users u ON u.id = rcm.user_id
+			WHERE rc.team_code = $1
+		`, teamCode)
 		if err != nil {
 			c.JSON(http.StatusNotFound, gin.H{"error": "Team or competition not found"})
 			return

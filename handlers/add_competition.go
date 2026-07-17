@@ -17,27 +17,28 @@ type Prize struct {
 
 // AddCompetitionRequest represents the request body for adding a competition
 type AddCompetitionRequest struct {
-	Name                  string          `json:"name" binding:"required"`
-	Description           string          `json:"description" binding:"required"`
-	Category              string          `json:"category" binding:"required"`
-	ImageUrl              string          `json:"imageUrl" binding:"required"`
-	BookletUrl            string          `json:"bookletUrl" binding:"required"`
-	PaidMessage           string          `json:"paidMessage" binding:"required"`
-	RegistrationStartDate string          `json:"registrationStartDate" binding:"required"`
-	RegistrationEndDate   string          `json:"registrationEndDate" binding:"required"`
-	CompetitionStartDate  string          `json:"competitionStartDate" binding:"required"`
-	CompetitionEndDate    string          `json:"competitionEndDate" binding:"required"`
-	CompetitionType       string          `json:"competitionType" binding:"required"`
-	Venue                 string          `json:"venue" binding:"required"`
-	RegistrationFee       int             `json:"registrationfee" binding:"required"`
-	Prizes                []Prize         `json:"prizes"`
-	Requirements          []string        `json:"requirements"`
-	Rules                 []string        `json:"rules"`
-	MaxMembers            *int            `json:"maxMembers"`
-	MinMembers            *int            `json:"minMembers"`
-	TeamSlot              int             `json:"teamSlot" binding:"required"`
-	FAQ                   json.RawMessage `json:"faq"`
-	Timeline              json.RawMessage `json:"timeline"`
+	Name                       string          `json:"name" binding:"required"`
+	Description                string          `json:"description" binding:"required"`
+	Category                   string          `json:"category" binding:"required"`
+	ImageUrl                   string          `json:"imageUrl" binding:"required"`
+	BookletUrl                 string          `json:"bookletUrl" binding:"required"`
+	PaidMessage                string          `json:"paidMessage" binding:"required"`
+	RegistrationStartDate      string          `json:"registrationStartDate" binding:"required"`
+	RegistrationEndDate        string          `json:"registrationEndDate" binding:"required"`
+	CompetitionStartDate       string          `json:"competitionStartDate" binding:"required"`
+	CompetitionEndDate         string          `json:"competitionEndDate" binding:"required"`
+	CompetitionType            string          `json:"competitionType" binding:"required"`
+	Venue                      string          `json:"venue" binding:"required"`
+	BinusianRegistrationFee    int             `json:"binusianRegistrationFee" binding:"required"`
+	NonBinusianRegistrationFee int             `json:"nonBinusianRegistrationFee" binding:"required"`
+	Prizes                     []Prize         `json:"prizes"`
+	Requirements               []string        `json:"requirements"`
+	Rules                      []string        `json:"rules"`
+	MaxMembers                 *int            `json:"maxMembers"`
+	MinMembers                 *int            `json:"minMembers"`
+	TeamSlot                   int             `json:"teamSlot" binding:"required"`
+	FAQ                        json.RawMessage `json:"faq"`
+	Timeline                   json.RawMessage `json:"timeline"`
 }
 
 // AddCompetitionHandler creates a new competition with associated prizes, requirements, and rules
@@ -71,15 +72,15 @@ func AddCompetitionHandler(db *sqlx.DB) gin.HandlerFunc {
                 name, description, category, image_url, booklet_url, paid_message,
                 registration_start_date, registration_end_date,
                 competition_start_date, competition_end_date,
-				competition_type, venue, registration_fee,
+				competition_type, venue, binusian_registration_fee, non_binusian_registration_fee,
 				max_members, min_members, team_slot, faq, timeline
-			) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18)
+			) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19)
             RETURNING id
         `, req.Name, req.Description, req.Category, req.ImageUrl,
 			req.BookletUrl, req.PaidMessage,
 			req.RegistrationStartDate, req.RegistrationEndDate,
 			req.CompetitionStartDate, req.CompetitionEndDate,
-			req.CompetitionType, req.Venue, req.RegistrationFee,
+			req.CompetitionType, req.Venue, req.BinusianRegistrationFee, req.NonBinusianRegistrationFee,
 			req.MaxMembers, req.MinMembers, req.TeamSlot, req.FAQ, req.Timeline).Scan(&competitionID)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create competition"})
