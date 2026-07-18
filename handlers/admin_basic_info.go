@@ -41,7 +41,7 @@ func GetAdminBasicInfoHandler(db *sqlx.DB) gin.HandlerFunc {
         _ = db.Get(&upcomingEvents, `SELECT COUNT(*) FROM competitions WHERE competition_start_date > CURRENT_DATE`)
 
         // Total participants (unique user_emails in registered_competition_members)
-        _ = db.Get(&totalParticipants, `SELECT COUNT(DISTINCT user_email) FROM registered_competition_members`)
+        _ = db.Get(&totalParticipants, `SELECT COUNT(DISTINCT user_id) FROM registered_competition_members`)
 
         // Category count (distinct categories in competitions)
         _ = db.Get(&categoryCount, `SELECT COUNT(DISTINCT category) FROM competitions`)

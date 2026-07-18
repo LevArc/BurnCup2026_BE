@@ -67,7 +67,7 @@ func GetAdminCompetitionStatisticHandler(db *sqlx.DB) gin.HandlerFunc {
 
 			// Total participants (unique user_email)
 			_ = db.Get(&totalParticipants, `
-                SELECT COUNT(DISTINCT rcm.user_email)
+                SELECT COUNT(DISTINCT rcm.user_id)
                 FROM registered_competition_members rcm
                 JOIN registered_competitions rc ON rc.id = rcm.registered_competition_id
                 WHERE rc.competition_id = $1
