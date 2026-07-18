@@ -82,23 +82,23 @@ func MidtransWebhookHandler(db *sqlx.DB) gin.HandlerFunc {
 		}
 		defer tx.Rollback()
 
-		// // Lock the competition row so slot checks and payment updates are serialized
-		// var lockedCompetitionID string
-		// err = tx.QueryRowx(`
-		// 	SELECT id
-		// 	FROM competitions
-		// 	WHERE id = (
-		// 		SELECT competition_id
-		// 		FROM registered_competitions
-		// 		WHERE team_code = $1
-		// 	)
-		// 	FOR UPDATE
-		// `, teamCode).Scan(&lockedCompetitionID)
-		// if err != nil {
-		// 	log.Printf("Failed to lock competition row for team %s: %v", teamCode, err)
-		// 	c.JSON(http.StatusInternalServerError, gin.H{"error": "Database error"})
-		// 	return
-		// }
+		// Lock the competition row so slot checks and payment updates are serialized
+		var lockedCompetitionID string
+		err = tx.QueryRowx(`
+			SELECT id
+			FROM competitions
+			WHERE id = (
+				SELECT competition_id
+				FROM registered_competitions
+				WHERE team_code = $1
+			)
+			FOR UPDATE
+		`, teamCode).Scan(&lockedCompetitionID)
+		if err != nil {
+			log.Printf("Failed to lock competition row for team %s: %v", teamCode, err)
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Database error"})
+			return
+		}
 
 		// Get team registration details
 		var teamInfo struct {
