@@ -19,10 +19,9 @@ import (
 
 // Define the OAuth configuration globally
 var googleOauthConfig = &oauth2.Config{
-	ClientID:     "253415571924-8t5u5e2ai416ms9pirvfb4s3c6ocmure.apps.googleusercontent.com", // Load from environment
-	ClientSecret: "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",                                      // Load from environment
-	// Make sure this matches your Authorized Redirect URIs in Google Cloud Console
-	RedirectURL: "http://localhost:8080/api/auth/google/callback",
+	ClientID:     os.Getenv("GOOGLE_CLIENT_ID"),
+	ClientSecret: os.Getenv("GOOGLE_CLIENT_SECRET"),
+	RedirectURL:  os.Getenv("GOOGLE_REDIRECT_URL"),
 	Scopes: []string{
 		"https://www.googleapis.com/auth/userinfo.email",
 		"https://www.googleapis.com/auth/userinfo.profile",
@@ -183,8 +182,8 @@ func GoogleCallbackHandler(db *sqlx.DB) gin.HandlerFunc {
 			return
 		}
 
-		// Redirect to frontend (Update this to your actual Next.js / React URL)
-		frontendURL := "http://localhost:5173/auth-success?token=" + appToken
+		// Redirect to frontend
+		frontendURL := os.Getenv("FRONTEND_URL") + "/auth-success?token=" + appToken
 		c.Redirect(http.StatusTemporaryRedirect, frontendURL)
 	}
 }

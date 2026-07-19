@@ -52,7 +52,7 @@ func GetQRLinkHandler(db *sqlx.DB) gin.HandlerFunc {
 			return
 		}
 
-		if teamInfo.MinMembers != nil && currentMembers+1 < *teamInfo.MinMembers {
+		if teamInfo.MinMembers != nil && currentMembers < *teamInfo.MinMembers {
 			c.JSON(http.StatusForbidden, gin.H{
 				"error":           fmt.Sprintf("Team must have at least %d members to proceed with payment", *teamInfo.MinMembers),
 				"currentMembers":  currentMembers,
@@ -103,7 +103,7 @@ func GetQRLinkHandler(db *sqlx.DB) gin.HandlerFunc {
 
 		// QR doesn't exist or is expired, create a new one
 		now := strconv.FormatInt(time.Now().Unix(), 10)
-		qrValue := fmt.Sprintf("qr-%s-%s", teamCode, now)
+		qrValue := fmt.Sprintf("qris-%s-%s", teamCode, now)
 
 		// Pick registration fee using team leader user type.
 		var registrationFee int
