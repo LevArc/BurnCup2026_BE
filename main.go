@@ -113,7 +113,7 @@ func main() {
 		AllowedOrigins: []string{
 			"http://localhost:3000",
 			"http://localhost:5173", 
-			"https://burn-cup2026-fe-w2ir.vercel.app/", 
+			"https://burn-cup2026-fe.vercel.app/", 
 			"https://burncup.com",
 		},
 		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
