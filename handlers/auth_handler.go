@@ -188,9 +188,14 @@ func GoogleCallbackHandler(db *sqlx.DB) gin.HandlerFunc {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate session token"})
 			return
 		}
+		frontendBaseURL := os.Getenv("FRONTEND_URL")
+		if frontendBaseURL == "" {
+			frontendBaseURL = "http://localhost:5173"
+		}
 
-		// Redirect to frontend
-		frontendURL := "http://localhost:5173/auth-success?token=" + appToken
+		// Construct the full redirect URL
+		frontendURL := frontendBaseURL + "/auth-success?token=" + appToken
+
 		c.Redirect(http.StatusTemporaryRedirect, frontendURL)
 	}
 }
