@@ -18,18 +18,22 @@ import (
 )
 
 // Define the OAuth configuration globally
-var googleOauthConfig = &oauth2.Config{
-    ClientID:     os.Getenv("GOOGLE_CLIENT_ID"),
-    ClientSecret: os.Getenv("GOOGLE_CLIENT_SECRET"),
-    RedirectURL:  os.Getenv("GOOGLE_REDIRECT_URL"),
-	Scopes: []string{
-		"https://www.googleapis.com/auth/userinfo.email",
-		"https://www.googleapis.com/auth/userinfo.profile",
-	},
-	Endpoint: google.Endpoint,
+var googleOauthConfig *oauth2.Config
+const oauthStateString = "random-secure-state-string"
+
+func InitOAuth() {
+	googleOauthConfig = &oauth2.Config{
+		ClientID:     os.Getenv("GOOGLE_CLIENT_ID"),
+		ClientSecret: os.Getenv("GOOGLE_CLIENT_SECRET"),
+		RedirectURL:  os.Getenv("GOOGLE_REDIRECT_URL"),
+		Scopes: []string{
+			"https://www.googleapis.com/auth/userinfo.email",
+			"https://www.googleapis.com/auth/userinfo.profile",
+		},
+		Endpoint: google.Endpoint,
+	}
 }
 
-const oauthStateString = "random-secure-state-string"
 
 // ==========================================
 // 1. EMAIL / PASSWORD REGISTRATION

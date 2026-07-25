@@ -22,6 +22,8 @@ func main() {
 		log.Println("No .env file found or error loading .env file")
 	}
 
+	handlers.InitOAuth()
+	
 	// Example DSN: "host=localhost port=5432 user=postgres password=yourpassword dbname=yourdb sslmode=disable"
 	dsn := os.Getenv("POSTGRES_DSN")
 	if dsn == "" {
