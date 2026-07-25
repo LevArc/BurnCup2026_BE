@@ -115,7 +115,7 @@ func main() {
 			"http://localhost:5173", 
 			"https://burn-cup2026-fe.vercel.app/", 
 			"https://burncup.com",
-			"https://www.burncup.com/"
+			"https://www.burncup.com/",
 		},
 		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 		AllowedHeaders:   []string{"Origin", "Authorization", "Content-Type"},
