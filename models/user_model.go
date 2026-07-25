@@ -18,7 +18,7 @@ type User struct {
 // RegisterRequest ONLY requires the essentials for sign-up
 type RegisterRequest struct {
     Email    string `json:"email" binding:"required,email"`
-    Password string `json:"password" binding:"required,min=6"`
+    Password string `json:"password" binding:"required,min=8"`
 }
 
 // LoginRequest is used to parse incoming login JSON payloads
