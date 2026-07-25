@@ -113,12 +113,7 @@ func main() {
 		AllowedOrigins: []string{
 			"http://localhost:3000",
 			"http://localhost:5173", 
-			"http://host.docker.internal:3000", 
-			"https://burncuptesting.notchgnas.com", 
-			"http://localhost:3001", 
-			"https://burncup.notchgnas.com", 
-			"https://burncup-fe-341997010337.asia-southeast1.run.app", 
-			"https://burncup-backend-341997010337.asia-southeast1.run.app", 
+			"https://burn-cup2026-fe-w2ir.vercel.app/", 
 			"https://burncup.com",
 		},
 		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
