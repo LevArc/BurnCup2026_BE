@@ -43,6 +43,8 @@ func main() {
 
 	r := gin.Default()
 
+	r.Use(middleware.RateLimitMiddleware())
+
 	r.GET("/", func(c *gin.Context) {
 		c.String(200, "BurnCup API is running")
 	})
