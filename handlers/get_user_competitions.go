@@ -3,6 +3,7 @@ package handlers
 import (
 	"fmt"
 	"net/http"
+	"strings"
 
 	"github.com/NotchG/BurnCup/models"
 	"github.com/gin-gonic/gin"
@@ -77,17 +78,39 @@ func GetUserCompetitionsHandler(db *sqlx.DB) gin.HandlerFunc {
 				continue // skip if not found
 			}
 			var remainingSlot int
-			err = db.Get(&remainingSlot, `
-                SELECT team_slot - (
-                    SELECT COUNT(*) 
-                    FROM registered_competitions 
-                    WHERE competition_id = $1 AND is_paid = true
-                )
-                FROM competitions WHERE id = $1
-            `, t.CompetitionID)
+			var leaderUserType string
+			_ = db.QueryRowx(`
+				SELECT COALESCE(u.user_type, '')
+				FROM users u
+				JOIN registered_competition_members rcm ON u.id = rcm.user_id
+				WHERE rcm.registered_competition_id = $1 AND rcm.is_team_leader = true
+				LIMIT 1
+			`, t.ID).Scan(&leaderUserType)
 
+			slotColumn := "non_binusian_team_slot"
+			if strings.EqualFold(leaderUserType, "Binusian") {
+				slotColumn = "binusian_team_slot"
+			}
+			categoryFilter := "LOWER(u.user_type) != 'binusian'"
+			if strings.EqualFold(leaderUserType, "Binusian") {
+				categoryFilter = "LOWER(u.user_type) = 'binusian'"
+			}
+			err = db.QueryRowx(fmt.Sprintf(`
+				SELECT cs.%s - (
+					SELECT COUNT(*)
+					FROM registered_competitions rc2
+					JOIN registered_competition_members rcm2 ON rc2.id = rcm2.registered_competition_id
+					JOIN users u ON u.id = rcm2.user_id
+					WHERE rc2.competition_id = $1
+					  AND rc2.is_paid = true
+					  AND rcm2.is_team_leader = true
+					  AND %s
+				)
+				FROM competition_slots cs
+				WHERE cs.competition_id = $1
+			`, slotColumn, categoryFilter), t.CompetitionID).Scan(&remainingSlot)
 			if err != nil {
-				remainingSlot = 0 // Fallback in case of an unexpected DB error
+				remainingSlot = 0
 			}
 			// Get team leader
 			var teamLeader models.User
