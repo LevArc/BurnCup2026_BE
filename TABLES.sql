@@ -77,3 +77,9 @@ CREATE TABLE IF NOT EXISTS registered_competition_members (
     is_team_leader BOOLEAN NOT NULL DEFAULT FALSE,
     PRIMARY KEY (registered_competition_id, user_id)              -- CHANGED: Updated composite PK
 );
+
+CREATE TABLE competition_slots (
+       competition_id UUID PRIMARY KEY REFERENCES competitions(id) ON DELETE CASCADE,
+       binusian_team_slot INT NOT NULL DEFAULT 0,
+       non_binusian_team_slot INT NOT NULL DEFAULT 0
+   );
