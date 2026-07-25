@@ -19,6 +19,7 @@ import (
 
 // Define the OAuth configuration globally
 var googleOauthConfig *oauth2.Config
+
 const oauthStateString = "random-secure-state-string"
 
 func InitOAuth() {
@@ -34,7 +35,6 @@ func InitOAuth() {
 	}
 }
 
-
 // ==========================================
 // 1. EMAIL / PASSWORD REGISTRATION
 // ==========================================
@@ -45,7 +45,10 @@ func RegisterHandler(db *sqlx.DB) gin.HandlerFunc {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
-
+		if len(req.Password) < 8 || len(req.Password) > 72 {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Password must be between 8 and 72 characters"})
+			return
+		}
 		// Hash the password
 		hashedPassword, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
 		if err != nil {
