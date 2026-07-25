@@ -108,6 +108,8 @@ func CreateTeamHandler(db *sqlx.DB) gin.HandlerFunc {
 			return
 		}
 
+		
+
 		// Fetch user info
 		var userID string
 		var userType string
@@ -119,6 +121,25 @@ func CreateTeamHandler(db *sqlx.DB) gin.HandlerFunc {
 			return
 		}
 
+		// Check requirements based on competition type
+		switch competitionType {
+		case "Binusian":
+			if !strings.EqualFold(userType, "Binusian") {
+				c.JSON(http.StatusForbidden, gin.H{"error": "Only Binusian users can join this competition"})
+				return
+			}
+		case "Binusian And SMA/SMK":
+			if !strings.EqualFold(userType, "SMA/SMK") && !strings.EqualFold(userType, "Binusian") {
+				c.JSON(http.StatusForbidden, gin.H{"error": "Only SMA/SMK and Binusian users can join this competition"})
+				return
+			}
+		case "Public":
+			// No restriction
+		default:
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Unknown competition type"})
+			return
+		}
+		
 		// Determine slot column based on leader user type
 		slotColumn := "non_binusian_team_slot"
 		if strings.EqualFold(userType, "Binusian") {
@@ -161,24 +182,7 @@ func CreateTeamHandler(db *sqlx.DB) gin.HandlerFunc {
 			return
 		}
 
-		// Check requirements based on competition type
-		switch competitionType {
-		case "Binusian":
-			if !strings.EqualFold(userType, "Binusian") {
-				c.JSON(http.StatusForbidden, gin.H{"error": "Only Binusian users can join this competition"})
-				return
-			}
-		case "Binusian And SMA/SMK":
-			if !strings.EqualFold(userType, "SMA/SMK") && !strings.EqualFold(userType, "Binusian") {
-				c.JSON(http.StatusForbidden, gin.H{"error": "Only SMA/SMK and Binusian users can join this competition"})
-				return
-			}
-		case "Public":
-			// No restriction
-		default:
-			c.JSON(http.StatusBadRequest, gin.H{"error": "Unknown competition type"})
-			return
-		}
+		
 
 		// Check if user already joined this competition
 		var existingTeamCount int
