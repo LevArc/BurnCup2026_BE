@@ -11,16 +11,16 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/jmoiron/sqlx"
 
-	// "github.com/joho/godotenv"
+	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
 	"github.com/rs/cors"
 )
 
 func main() {
 	// // Load environment variables from .env file
-	// if err := godotenv.Load(); err != nil {
-	// 	log.Println("No .env file found or error loading .env file")
-	// }
+	if err := godotenv.Load(); err != nil {
+		log.Println("No .env file found or error loading .env file")
+	}
 
 	// Example DSN: "host=localhost port=5432 user=postgres password=yourpassword dbname=yourdb sslmode=disable"
 	dsn := os.Getenv("POSTGRES_DSN")
