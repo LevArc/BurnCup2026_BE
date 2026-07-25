@@ -32,6 +32,11 @@ func main() {
 	if err != nil {
 		log.Fatalf("Failed to connect to PostgreSQL: %v", err)
 	}
+		
+	// Hard limit to prevent exceeding Azure B1ms 35-connection max
+    db.SetMaxOpenConns(25)
+    // Keep connections open in the background to prevent latency from reconnecting
+    db.SetMaxIdleConns(25)
 	defer db.Close()
 
 	r := gin.Default()

@@ -14,6 +14,7 @@ import (
 // and updates the order_id in registered_competitions for the given teamCode to this value
 func GetQRLinkHandler(db *sqlx.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
+		
 		teamCode := c.Param("teamCode")
 		if teamCode == "" {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "Missing teamCode parameter"})
@@ -81,6 +82,10 @@ func GetQRLinkHandler(db *sqlx.DB) gin.HandlerFunc {
 			return
 		}
 
+		// If midtrans is available comment 2 lines below
+		c.JSON(http.StatusBadRequest, gin.H{"error": "This feature is not available right now. Please transfer to the BLU account below"})
+		return
+		
 		// Print debug info: local time and valid time
 		fmt.Printf("DEBUG: Local time: %s\n", time.Now().Format(time.RFC3339))
 		if teamInfo.ValidTime != nil {
