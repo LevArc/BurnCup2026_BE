@@ -15,7 +15,7 @@ var adminEmails = map[string]bool{
 	"edward.matthew.tenggono@gmail.com": true,
 	"ghanifabihaziq@gmail.com": true,
 	"burncupbinusbekasi@gmail.com":true,
-
+	"teffany.kindangen@binus.ac.id":true,
 }
 
 // AdminAuthMiddleware validates the JWT and checks if the user's email is in the admin list
