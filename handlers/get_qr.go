@@ -120,7 +120,7 @@ func GetQRLinkHandler(db *sqlx.DB) gin.HandlerFunc {
 
 		// If midtrans is not available, return BLU transfer info
 		// Comment out the 2 lines below when Midtrans is ready
-		c.JSON(http.StatusBadRequest, gin.H{"error": "This feature is not available right now. Please transfer to the BLU account below and send proof to the number below"})
+		c.JSON(http.StatusOK, gin.H{"error": "This feature is not available right now. Please transfer to the BLU account below and send proof to the number below"})
 		return
 
 		// If QR exists and is still valid, return it
