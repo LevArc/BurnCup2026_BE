@@ -88,11 +88,16 @@ func JoinTeamHandler(db *sqlx.DB) gin.HandlerFunc {
 
 		// Fetch competition info
 		var competitionType string
+		var competitionCategory string
 		var maxMembers *int
+
 		err = db.QueryRowx(
-			`SELECT competition_type, max_members FROM competitions WHERE id=$1`,
+			`SELECT competition_type, category, max_members
+     		FROM competitions
+     		WHERE id = $1`,
 			teamCompetitionID,
-		).Scan(&competitionType, &maxMembers)
+		).Scan(&competitionType, &competitionCategory, &maxMembers)
+
 		if err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "Competition not found"})
 			return
@@ -176,9 +181,14 @@ func JoinTeamHandler(db *sqlx.DB) gin.HandlerFunc {
 			return
 		}
 		if strings.EqualFold(safeUserType, "Binusian") {
-			if !strings.EqualFold(safeMajor, safeLeaderMajor) {
-				c.JSON(http.StatusForbidden, gin.H{"error": "All Binusian team members must have the same major"})
-				return
+			// Creative competitions allow Binusian students from different majors
+			if !strings.EqualFold(competitionCategory, "Creative") {
+				if !strings.EqualFold(safeMajor, safeLeaderMajor) {
+					c.JSON(http.StatusForbidden, gin.H{
+						"error": "All Binusian team members must have the same major",
+					})
+					return
+				}
 			}
 		} else if strings.EqualFold(safeUserType, "SMA/SMK") {
 			if !strings.EqualFold(safeSchool, safeLeaderSchool) {
