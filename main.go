@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"time"
 
 	"github.com/NotchG/BurnCup/handlers"
 	"github.com/NotchG/BurnCup/middleware"
@@ -23,7 +24,7 @@ func main() {
 	}
 
 	handlers.InitOAuth()
-	
+
 	// Example DSN: "host=localhost port=5432 user=postgres password=yourpassword dbname=yourdb sslmode=disable"
 	dsn := os.Getenv("POSTGRES_DSN")
 	if dsn == "" {
@@ -34,11 +35,11 @@ func main() {
 	if err != nil {
 		log.Fatalf("Failed to connect to PostgreSQL: %v", err)
 	}
-		
-	// Hard limit to prevent exceeding Azure B1ms 35-connection max
-    db.SetMaxOpenConns(25)
-    // Keep connections open in the background to prevent latency from reconnecting
-    db.SetMaxIdleConns(25)
+
+	db.SetMaxOpenConns(15)
+	db.SetMaxIdleConns(5)
+	db.SetConnMaxLifetime(30 * time.Minute)
+	db.SetConnMaxIdleTime(5 * time.Minute)
 	defer db.Close()
 
 	r := gin.Default()
@@ -112,8 +113,8 @@ func main() {
 	corsHandler := cors.New(cors.Options{
 		AllowedOrigins: []string{
 			"http://localhost:3000",
-			"http://localhost:5173", 
-			"https://burn-cup2026-fe.vercel.app/", 
+			"http://localhost:5173",
+			"https://burn-cup2026-fe.vercel.app/",
 			"https://burncup.com",
 			"https://www.burncup.com/",
 		},

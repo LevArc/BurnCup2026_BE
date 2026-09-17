@@ -51,7 +51,7 @@ func GetQRLinkHandler(db *sqlx.DB) gin.HandlerFunc {
 		}
 		if teamInfo.MinMembers != nil && currentMembers < *teamInfo.MinMembers {
 			c.JSON(http.StatusForbidden, gin.H{
-				"error":           fmt.Sprintf("Team must have at least %d members to proceed with payment", *teamInfo.MinMembers),
+				"error":           fmt.Sprintf("Team must have at least %d members to participate", *teamInfo.MinMembers),
 				"currentMembers":  currentMembers,
 				"requiredMembers": *teamInfo.MinMembers,
 			})

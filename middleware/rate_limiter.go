@@ -20,7 +20,7 @@ func getVisitor(ip string) *rate.Limiter {
 	if !exists {
 		// Konfigurasi: 2 request per detik, maksimal burst 5 request
 		// Sesuaikan angka ini dengan kebutuhan BurnCup
-		limiter = rate.NewLimiter(3, 5)
+		limiter = rate.NewLimiter(10, 50)
 		visitors[ip] = limiter
 	}
 
