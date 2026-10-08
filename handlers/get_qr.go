@@ -39,24 +39,7 @@ func GetQRLinkHandler(db *sqlx.DB) gin.HandlerFunc {
 			return
 		}
 
-		// Check minimum member requirements
-		var currentMembers int
-		err = db.Get(&currentMembers, `
-			SELECT COUNT(*) FROM registered_competition_members
-			WHERE registered_competition_id = $1
-		`, teamInfo.TeamID)
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to count team members"})
-			return
-		}
-		if teamInfo.MinMembers != nil && currentMembers < *teamInfo.MinMembers {
-			c.JSON(http.StatusForbidden, gin.H{
-				"error":           fmt.Sprintf("Team must have at least %d members to participate", *teamInfo.MinMembers),
-				"currentMembers":  currentMembers,
-				"requiredMembers": *teamInfo.MinMembers,
-			})
-			return
-		}
+		
 
 		// Get team leader user type
 		var leaderUserType string
@@ -114,6 +97,26 @@ func GetQRLinkHandler(db *sqlx.DB) gin.HandlerFunc {
 				"error":          "Competition team slots are full for your category",
 				"availableSlots": 0,
 				"totalSlots":     totalSlot,
+			})
+			return
+		}
+		
+
+		// Check minimum member requirements
+		var currentMembers int
+		err = db.Get(&currentMembers, `
+			SELECT COUNT(*) FROM registered_competition_members
+			WHERE registered_competition_id = $1
+		`, teamInfo.TeamID)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to count team members"})
+			return
+		}
+		if teamInfo.MinMembers != nil && currentMembers < *teamInfo.MinMembers {
+			c.JSON(http.StatusForbidden, gin.H{
+				"error":           fmt.Sprintf("Team must have at least %d members to participate", *teamInfo.MinMembers),
+				"currentMembers":  currentMembers,
+				"requiredMembers": *teamInfo.MinMembers,
 			})
 			return
 		}
