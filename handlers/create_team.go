@@ -78,6 +78,11 @@ func CreateTeamHandler(db *sqlx.DB) gin.HandlerFunc {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid payload"})
 			return
 		}
+		
+		if status, message := checkRegistrationOpen(db, req.CompetitionID); status != 0 {
+			c.JSON(status, gin.H{"error": message})
+			return
+		}
 
 		// Check team name globally
 		var nameExists bool
@@ -96,6 +101,7 @@ func CreateTeamHandler(db *sqlx.DB) gin.HandlerFunc {
 			return
 		}
 
+
 		// Fetch competition info
 		var competitionType string
 		var maxMembers *int
@@ -107,8 +113,6 @@ func CreateTeamHandler(db *sqlx.DB) gin.HandlerFunc {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "Competition not found"})
 			return
 		}
-
-		
 
 		// Fetch user info
 		var userID string
@@ -139,7 +143,7 @@ func CreateTeamHandler(db *sqlx.DB) gin.HandlerFunc {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "Unknown competition type"})
 			return
 		}
-		
+
 		// Determine slot column based on leader user type
 		slotColumn := "non_binusian_team_slot"
 		if strings.EqualFold(userType, "Binusian") {
@@ -181,8 +185,6 @@ func CreateTeamHandler(db *sqlx.DB) gin.HandlerFunc {
 			c.JSON(http.StatusForbidden, gin.H{"error": "Competition team slots are full for your category"})
 			return
 		}
-
-		
 
 		// Check if user already joined this competition
 		var existingTeamCount int

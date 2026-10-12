@@ -39,7 +39,10 @@ func GetQRLinkHandler(db *sqlx.DB) gin.HandlerFunc {
 			return
 		}
 
-		
+		if status, message := checkRegistrationOpen(db, teamInfo.CompetitionID); status != 0 {
+			c.JSON(status, gin.H{"error": message})
+			return
+		}
 
 		// Get team leader user type
 		var leaderUserType string
@@ -100,7 +103,6 @@ func GetQRLinkHandler(db *sqlx.DB) gin.HandlerFunc {
 			})
 			return
 		}
-		
 
 		// Check minimum member requirements
 		var currentMembers int
